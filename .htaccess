@@ -1,0 +1,13 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Prevent direct access to sensitive files
+    <Files ~ "^\.env">
+        Order allow,deny
+        Deny from all
+    </Files>
+
+    # Forward all traffic to the public/ folder for shared hosting
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
