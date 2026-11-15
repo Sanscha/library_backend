@@ -1,6 +1,6 @@
 ﻿@extends('layouts.admin')
 
-@section('title', 'Users & Managers')
+@section('title', 'Students & Users')
 
 @section('topbar_actions')
     <button type="button" class="btn btn-primary btn-sm" onclick="openModal('addUserModal')">+ Add User</button>

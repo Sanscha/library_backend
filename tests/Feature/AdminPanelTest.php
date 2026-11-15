@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Library;
 use App\Models\Plan;
-use App\Models\Seat;
 use App\Models\User;
 use App\Models\Zone;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -77,14 +76,12 @@ class AdminPanelTest extends TestCase
     public function test_staff_can_view_dashboard(): void
     {
         $staff = User::factory()->create(['role' => 'staff']);
-        $zone = Zone::create(['name' => 'Main Hall', 'code' => 'MH']);
-        Seat::create(['zone_id' => $zone->id, 'seat_number' => 'M-01', 'status' => 'available']);
 
         $response = $this->actingAs($staff)->get('/admin');
 
         $response->assertStatus(200)
-            ->assertSee('Live Floor Seat Grid Map')
-            ->assertSee('Main Hall');
+            ->assertSee('Total Razorpay Revenue')
+            ->assertSee('Registered Libraries');
     }
 
     public function test_staff_can_create_user(): void
@@ -226,6 +223,62 @@ class AdminPanelTest extends TestCase
             'library_id' => $library->id,
             'type' => 'library_registration',
             'status' => 'completed',
+        ]);
+    }
+
+    public function test_staff_can_update_one_time_library_registration_fee_via_web(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+        $owner = User::factory()->create(['role' => 'manager']);
+        $library = Library::create([
+            'user_id' => $owner->id,
+            'name' => 'Elite Study Hub',
+            'slug' => 'elite-study-hub',
+            'address' => 'JM Road, Pune',
+            'registration_fee' => 999.00,
+            'payment_status' => 'unpaid',
+            'status' => 'pending_payment',
+        ]);
+
+        $response = $this->actingAs($staff)->post("/admin/libraries/{$library->id}/update-fee", [
+            'registration_fee' => 1499.00,
+        ]);
+
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('libraries', [
+            'id' => $library->id,
+            'registration_fee' => 1499.00,
+        ]);
+    }
+
+    public function test_admin_can_update_one_time_library_registration_fee_via_api(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $owner = User::factory()->create(['role' => 'manager']);
+        $library = Library::create([
+            'user_id' => $owner->id,
+            'name' => 'Apex Reading Lounge',
+            'slug' => 'apex-reading-lounge',
+            'address' => 'Kothrud, Pune',
+            'registration_fee' => 999.00,
+            'payment_status' => 'unpaid',
+            'status' => 'pending_payment',
+        ]);
+
+        $token = $admin->createToken('admin_token')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson("/api/admin/libraries/{$library->id}/fee", [
+                'registration_fee' => 499.00,
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('library.registration_fee', '499.00');
+
+        $this->assertDatabaseHas('libraries', [
+            'id' => $library->id,
+            'registration_fee' => 499.00,
         ]);
     }
 }

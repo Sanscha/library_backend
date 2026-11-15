@@ -400,10 +400,17 @@
                         </div>
 
                         <div>
-                            <label style="font-size:11px; text-transform:uppercase; color:var(--text-muted); font-weight:600;">Registration Fee</label>
-                            <div style="font-size:16px; font-weight:600; color:var(--text-primary); margin-top:2px;">
+                            <label style="font-size:11px; text-transform:uppercase; color:var(--text-muted); font-weight:600;">One-Time Onboarding Fee</label>
+                            <div style="font-size:18px; font-weight:700; color:var(--text-primary); margin-top:2px;">
                                 ₹{{ number_format($library->registration_fee, 2) }}
                             </div>
+                            <form action="{{ route('admin.libraries.update-fee', $library->id) }}" method="POST" style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+                                @csrf
+                                <div style="width:130px;">
+                                    <input type="number" step="0.01" min="0" name="registration_fee" value="{{ $library->registration_fee }}" class="form-control" style="padding:5px 8px; font-size:13px; font-weight:600;" required>
+                                </div>
+                                <button type="submit" class="btn btn-secondary btn-sm" style="padding:5px 12px;">Save Fee</button>
+                            </form>
                         </div>
 
                         <div>

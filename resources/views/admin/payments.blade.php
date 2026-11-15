@@ -1,6 +1,6 @@
 ﻿@extends('layouts.admin')
 
-@section('title', 'Payments & Billing')
+@section('title', 'Razorpay Payments & Transactions')
 
 @section('topbar_actions')
     <button type="button" class="btn btn-secondary btn-sm" onclick="openModal('addPlanModal')">+ Add Plan</button>

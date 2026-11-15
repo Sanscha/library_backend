@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'Libraries & Owners')
 
@@ -167,11 +167,16 @@
                                 </div>
                             </td>
                             <td>
-                                <div style="font-weight:500; color:var(--text-primary);">₹{{ number_format($lib->registration_fee, 2) }}</div>
-                                <div style="margin-top:2px;">
+                                <div style="font-weight:600; color:var(--text-primary); font-size:13.5px;">₹{{ number_format($lib->registration_fee, 2) }}</div>
+                                <div style="margin-top:2px; display:flex; align-items:center; gap:6px;">
                                     <span class="badge badge-{{ $lib->payment_status }}">
                                         {{ $lib->payment_status === 'paid' ? 'Paid' : 'Unpaid' }}
                                     </span>
+                                    <button type="button" 
+                                        onclick="openFeeModal('{{ $lib->id }}', '{{ addslashes($lib->name) }}', '{{ $lib->registration_fee }}')"
+                                        style="background:none; border:none; color:var(--primary); font-size:11.5px; cursor:pointer; text-decoration:underline; padding:0;">
+                                        Edit Fee
+                                    </button>
                                 </div>
                             </td>
                             <td>
@@ -221,6 +226,34 @@
         @endif
     </div>
 
+    <!-- Edit Registration Fee Modal -->
+    <div id="feeModal" class="modal">
+        <div class="modal-content" style="max-width: 440px;">
+            <form id="feeForm" method="POST" action="">
+                @csrf
+                <div class="modal-header">
+                    <h3 id="feeModalTitle">Set One-Time Onboarding Fee</h3>
+                    <button type="button" class="modal-close" onclick="closeModal('feeModal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:12px; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:4px;">
+                            One-Time Onboarding Fee (₹ INR)
+                        </label>
+                        <input type="number" step="0.01" min="0" name="registration_fee" id="feeInput" class="form-control" required style="font-size:16px; font-weight:600; padding:10px 12px;">
+                        <span style="font-size:12px; color:var(--text-muted); margin-top:6px; display:block; line-height:1.4;">
+                            Set the one-time registration fee the library owner pays to activate their branch listing on the platform.
+                        </span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('feeModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Fee</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Library Details Modal -->
     <div id="libraryDetailsModal" class="modal">
         <div class="modal-content" style="max-width: 540px;">
@@ -241,6 +274,13 @@
 
 @section('scripts')
 <script>
+    function openFeeModal(libraryId, libraryName, currentFee) {
+        document.getElementById('feeModalTitle').innerText = 'Set One-Time Fee for ' + libraryName;
+        document.getElementById('feeInput').value = parseFloat(currentFee).toFixed(2);
+        document.getElementById('feeForm').action = '/admin/libraries/' + libraryId + '/update-fee';
+        openModal('feeModal');
+    }
+
     function showLibraryModal(lib) {
         document.getElementById('modalLibraryName').innerText = lib.name;
         

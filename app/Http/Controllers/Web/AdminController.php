@@ -88,7 +88,9 @@ class AdminController extends Controller
         $totalLibraries = Library::count();
         $activeLibraries = Library::where('status', 'active')->count();
         $pendingLibraries = Library::where('payment_status', 'unpaid')->count();
+        $totalRevenue = Payment::where('status', 'completed')->sum('amount');
         $libraryRegRevenue = Payment::where('type', 'library_registration')->where('status', 'completed')->sum('amount');
+        $studentBookingRevenue = Payment::where('type', '!=', 'library_registration')->where('status', 'completed')->sum('amount');
 
         $totalSeats = Seat::count();
         $occupiedSeats = Seat::where('status', 'occupied')->count();
@@ -108,7 +110,7 @@ class AdminController extends Controller
 
         $recentPayments = Payment::with(['user', 'library', 'plan', 'collector'])
             ->latest()
-            ->limit(6)
+            ->limit(8)
             ->get();
 
         $recentBookings = Booking::with(['user', 'seat.zone'])
@@ -118,7 +120,12 @@ class AdminController extends Controller
 
         $recentLibraries = Library::with('owner')
             ->latest()
-            ->limit(5)
+            ->limit(6)
+            ->get();
+
+        $recentUsers = User::whereIn('role', ['user', 'member'])
+            ->latest()
+            ->limit(6)
             ->get();
 
         return view('admin.dashboard', compact(
@@ -127,7 +134,9 @@ class AdminController extends Controller
             'totalLibraries',
             'activeLibraries',
             'pendingLibraries',
+            'totalRevenue',
             'libraryRegRevenue',
+            'studentBookingRevenue',
             'totalSeats',
             'occupiedSeats',
             'reservedSeats',
@@ -140,7 +149,8 @@ class AdminController extends Controller
             'zones',
             'recentPayments',
             'recentBookings',
-            'recentLibraries'
+            'recentLibraries',
+            'recentUsers'
         ));
     }
 
@@ -272,6 +282,23 @@ class AdminController extends Controller
         $library->save();
 
         return back()->with('success', "Library '{$library->name}' status changed to {$library->status}.");
+    }
+
+    /**
+     * Enter / Update the one-time onboarding fee for a library.
+     */
+    public function updateLibraryFee(Request $request, int|string $id): RedirectResponse
+    {
+        $fields = $request->validate([
+            'registration_fee' => 'required|numeric|min:0',
+        ]);
+
+        $library = Library::findOrFail($id);
+        $oldFee = number_format($library->registration_fee, 2);
+        $library->registration_fee = (float) $fields['registration_fee'];
+        $library->save();
+
+        return back()->with('success', "One-time onboarding fee for '{$library->name}' updated from ₹{$oldFee} to ₹".number_format($library->registration_fee, 2).'.');
     }
 
     /**

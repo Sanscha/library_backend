@@ -25,6 +25,7 @@ Route::middleware('staff')->prefix('admin')->name('admin.')->group(function () {
     Route::get('/libraries', [AdminController::class, 'libraries'])->name('libraries');
     Route::get('/libraries/{id}', [AdminController::class, 'showLibrary'])->name('libraries.show');
     Route::get('/libraries/{id}/details-json', [AdminController::class, 'getLibraryJson'])->name('libraries.details-json');
+    Route::post('/libraries/{id}/update-fee', [AdminController::class, 'updateLibraryFee'])->name('libraries.update-fee');
     Route::post('/libraries/{id}/toggle-status', [AdminController::class, 'toggleLibraryStatus'])->name('libraries.toggle-status');
     Route::post('/libraries/{id}/verify-payment', [AdminController::class, 'verifyLibraryPayment'])->name('libraries.verify-payment');
 

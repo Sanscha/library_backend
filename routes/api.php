@@ -127,6 +127,7 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'staff'])->group(function ()
     Route::get('/users', [AdminApiController::class, 'getUsers']);
     Route::get('/libraries', [AdminApiController::class, 'getLibraries']);
     Route::get('/libraries/{id}', [AdminApiController::class, 'getLibrary']);
+    Route::put('/libraries/{id}/fee', [AdminApiController::class, 'updateLibraryFee']);
     Route::get('/seats', [AdminApiController::class, 'getSeatsOverview']);
     Route::get('/payments', [AdminApiController::class, 'getPayments']);
 

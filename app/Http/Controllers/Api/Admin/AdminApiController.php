@@ -102,6 +102,26 @@ class AdminApiController extends Controller
     }
 
     /**
+     * Enter or update one-time onboarding fee for a library.
+     */
+    public function updateLibraryFee(Request $request, int|string $id): JsonResponse
+    {
+        $fields = $request->validate([
+            'registration_fee' => 'required|numeric|min:0',
+        ]);
+
+        $library = Library::findOrFail($id);
+        $library->registration_fee = (float) $fields['registration_fee'];
+        $library->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => "One-time registration fee for '{$library->name}' updated to ₹".number_format($library->registration_fee, 2).'.',
+            'library' => $library,
+        ], 200);
+    }
+
+    /**
      * Inspect full library details, photos, timings, facilities/suvidha, and seat availability.
      */
     public function getLibrary(int|string $id): JsonResponse
