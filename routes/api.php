@@ -119,9 +119,10 @@ Route::prefix('manager')->group(function () {
         Route::put('/seats/{id}/status', [ManagerSeatController::class, 'updateStatus']);
         Route::delete('/seats/{id}', [ManagerSeatController::class, 'destroy']);
 
-        // Onboarding Fee Payments
+        // Onboarding Fee & Library Payment Transactions
         Route::get('/payment/details', [ManagerPaymentController::class, 'getPaymentDetails']);
         Route::post('/payment/verify', [ManagerPaymentController::class, 'verifyPayment']);
+        Route::get('/payments', [ManagerPaymentController::class, 'getLibraryPayments']);
     });
 });
 

@@ -468,4 +468,80 @@ class ManagerLibraryManagementTest extends TestCase
 
         $this->assertDatabaseMissing('plans', ['id' => $customPlanId]);
     }
+
+    public function test_each_library_payment_is_recorded_and_viewable_by_manager_and_admin(): void
+    {
+        $managerToken = $this->manager->createToken('manager_token')->plainTextToken;
+        $adminToken = $this->admin->createToken('admin_token')->plainTextToken;
+
+        // 1. Manager verifies onboarding registration fee payment (₹999)
+        // Library starts as unpaid
+        $this->library->payment_status = 'unpaid';
+        $this->library->status = 'pending_payment';
+        $this->library->save();
+
+        $verifyRes = $this->withHeader('Authorization', 'Bearer '.$managerToken)
+            ->postJson('/api/manager/payment/verify', [
+                'payment_method' => 'upi',
+                'transaction_id' => 'UPI-REG-TEST-12345',
+            ]);
+
+        $verifyRes->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('payment.library_id', $this->library->id)
+            ->assertJsonPath('payment.type', 'library_registration')
+            ->assertJsonPath('payment.amount', '999.00');
+
+        // 2. Student subscribes to a plan belonging to this library
+        $plan = $this->library->plans()->create([
+            'name' => '1 Month Study Pass',
+            'price' => 2000.00,
+            'duration_days' => 30,
+            'shift' => 'full_day',
+            'is_active' => true,
+        ]);
+
+        $student = User::create([
+            'name' => 'Rohit Deshmukh',
+            'email' => 'rohit@student.com',
+            'phone' => '9887766554',
+            'role' => 'user',
+            'status' => 'active',
+            'password' => bcrypt('password123'),
+        ]);
+        $studentToken = $student->createToken('student_token')->plainTextToken;
+
+        $subRes = $this->withHeader('Authorization', 'Bearer '.$studentToken)
+            ->postJson('/api/plans/subscribe', [
+                'plan_id' => $plan->id,
+            ]);
+
+        $subRes->assertStatus(201)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('payment.library_id', $this->library->id)
+            ->assertJsonPath('payment.amount', '2000.00');
+
+        // 3. Manager fetches their library's payments via GET /api/manager/payments
+        $managerPaymentsRes = $this->withHeader('Authorization', 'Bearer '.$managerToken)
+            ->getJson('/api/manager/payments');
+
+        $managerPaymentsRes->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('library.id', $this->library->id)
+            ->assertJsonPath('metrics.total_revenue', 2999) // 999 reg + 2000 plan
+            ->assertJsonPath('metrics.membership_revenue', 2000)
+            ->assertJsonPath('metrics.total_transactions', 2)
+            ->assertJsonCount(2, 'data');
+
+        // 4. Admin filters payments for this specific library via GET /api/admin/payments?library_id={id}
+        $adminPaymentsRes = $this->actingAs($this->admin, 'sanctum')
+            ->getJson('/api/admin/payments?library_id='.$this->library->id);
+
+        $adminPaymentsRes->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('metrics.total_revenue', 2999)
+            ->assertJsonPath('metrics.library_registration_fees', 999)
+            ->assertJsonPath('metrics.membership_plan_fees', 2000)
+            ->assertJsonCount(2, 'data');
+    }
 }

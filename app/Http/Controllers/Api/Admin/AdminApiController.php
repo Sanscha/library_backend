@@ -290,6 +290,10 @@ class AdminApiController extends Controller
         $query = Payment::with(['user:id,name,email,phone', 'library:id,name', 'plan:id,name', 'booking.seat'])
             ->latest();
 
+        if ($libraryId = $request->input('library_id')) {
+            $query->where('library_id', $libraryId);
+        }
+
         if ($type = $request->input('type')) {
             $query->where('type', $type);
         }
@@ -304,14 +308,20 @@ class AdminApiController extends Controller
 
         $payments = $query->paginate(20)->withQueryString();
 
-        // Calculate metrics
+        // Calculate metrics (scoped to library if requested)
+        $metricsQuery = Payment::where('status', 'completed');
+        if ($libraryId = $request->input('library_id')) {
+            $metricsQuery->where('library_id', $libraryId);
+        }
+
         $metrics = [
-            'total_revenue' => (float) Payment::where('status', 'completed')->sum('amount'),
-            'library_registration_fees' => (float) Payment::where('type', 'library_registration')->where('status', 'completed')->sum('amount'),
-            'seat_booking_fees' => (float) Payment::where('type', 'seat_booking')->where('status', 'completed')->sum('amount'),
-            'upi_total' => (float) Payment::where('payment_method', 'upi')->where('status', 'completed')->sum('amount'),
-            'razorpay_total' => (float) Payment::where('payment_method', 'online_razorpay')->where('status', 'completed')->sum('amount'),
-            'cash_total' => (float) Payment::where('payment_method', 'cash')->where('status', 'completed')->sum('amount'),
+            'total_revenue' => (float) (clone $metricsQuery)->sum('amount'),
+            'library_registration_fees' => (float) (clone $metricsQuery)->where('type', 'library_registration')->sum('amount'),
+            'seat_booking_fees' => (float) (clone $metricsQuery)->where('type', 'seat_booking')->sum('amount'),
+            'membership_plan_fees' => (float) (clone $metricsQuery)->where('type', 'membership_plan')->sum('amount'),
+            'upi_total' => (float) (clone $metricsQuery)->where('payment_method', 'upi')->sum('amount'),
+            'razorpay_total' => (float) (clone $metricsQuery)->where('payment_method', 'online_razorpay')->sum('amount'),
+            'cash_total' => (float) (clone $metricsQuery)->where('payment_method', 'cash')->sum('amount'),
         ];
 
         return response()->json([

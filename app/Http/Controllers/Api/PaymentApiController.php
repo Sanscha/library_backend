@@ -36,11 +36,21 @@ class PaymentApiController extends Controller
         $transactionNote = urlencode("Payment for {$fields['type']} - {$txnId}");
         $upiString = "upi://pay?pa={$upiVpa}&pn={$payeeName}&am={$amount}&cu=INR&tn={$transactionNote}&tr={$txnId}";
 
+        $libraryId = $fields['library_id'] ?? null;
+        if (! $libraryId && ! empty($fields['booking_id'])) {
+            $booking = Booking::with('seat')->find($fields['booking_id']);
+            $libraryId = $booking?->seat?->library_id;
+        }
+        if (! $libraryId && ! empty($fields['plan_id'])) {
+            $plan = Plan::find($fields['plan_id']);
+            $libraryId = $plan?->library_id;
+        }
+
         $payment = Payment::create([
             'user_id' => $user->id,
             'booking_id' => $fields['booking_id'] ?? null,
             'plan_id' => $fields['plan_id'] ?? null,
-            'library_id' => $fields['library_id'] ?? null,
+            'library_id' => $libraryId,
             'amount' => $amount,
             'currency' => 'INR',
             'type' => $fields['type'],

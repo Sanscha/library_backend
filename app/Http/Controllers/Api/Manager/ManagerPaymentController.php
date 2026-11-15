@@ -150,4 +150,65 @@ class ManagerPaymentController extends Controller
             'payment' => $payment,
         ], 200);
     }
+
+    /**
+     * Get all payment transactions and revenue breakdown recorded for this library.
+     */
+    public function getLibraryPayments(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $library = $user->library;
+
+        if (! $library) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No library linked to this manager account.',
+            ], 404);
+        }
+
+        $query = Payment::with(['user:id,name,email,phone', 'plan:id,name,duration_days,price', 'booking.seat'])
+            ->where('library_id', $library->id)
+            ->latest();
+
+        if ($type = $request->input('type')) {
+            $query->where('type', $type);
+        }
+
+        if ($method = $request->input('payment_method')) {
+            $query->where('payment_method', $method);
+        }
+
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
+        }
+
+        $payments = $query->paginate(20)->withQueryString();
+
+        $completedQuery = Payment::where('library_id', $library->id)->where('status', 'completed');
+
+        $metrics = [
+            'total_revenue' => (float) (clone $completedQuery)->sum('amount'),
+            'membership_revenue' => (float) (clone $completedQuery)->where('type', 'membership_plan')->sum('amount'),
+            'booking_revenue' => (float) (clone $completedQuery)->where('type', 'seat_booking')->sum('amount'),
+            'onboarding_fee_paid' => $library->payment_status === 'paid',
+            'total_transactions' => Payment::where('library_id', $library->id)->count(),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'library' => [
+                'id' => $library->id,
+                'name' => $library->name,
+                'registration_fee' => (float) $library->registration_fee,
+                'payment_status' => $library->payment_status,
+            ],
+            'metrics' => $metrics,
+            'data' => $payments->items(),
+            'pagination' => [
+                'current_page' => $payments->currentPage(),
+                'last_page' => $payments->lastPage(),
+                'total' => $payments->total(),
+            ],
+        ], 200);
+    }
 }

@@ -654,12 +654,24 @@ class AdminController extends Controller
 
         $txnId = (! empty($validated['transaction_id'])) ? $validated['transaction_id'] : Payment::generateTransactionId(strtoupper($validated['payment_method']));
 
+        $libraryId = null;
+        if (! empty($validated['booking_id'])) {
+            $booking = Booking::with('seat')->find($validated['booking_id']);
+            $libraryId = $booking?->seat?->library_id;
+        }
+        if (! $libraryId && ! empty($validated['plan_id'])) {
+            $plan = Plan::find($validated['plan_id']);
+            $libraryId = $plan?->library_id;
+        }
+
         Payment::create([
             'user_id' => $validated['user_id'],
+            'library_id' => $libraryId,
             'plan_id' => $validated['plan_id'] ?? null,
             'booking_id' => $validated['booking_id'] ?? null,
             'collected_by' => Auth::id(),
             'amount' => $validated['amount'],
+            'type' => ! empty($validated['plan_id']) ? 'membership_plan' : 'seat_booking',
             'currency' => 'INR',
             'payment_method' => $validated['payment_method'],
             'transaction_id' => $txnId,
