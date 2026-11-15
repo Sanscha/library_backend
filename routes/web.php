@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Web\AdminController;
+use App\Mail\OtpVerificationMail;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
 // Redirect root to Admin Dashboard
@@ -74,5 +76,27 @@ Route::get('/system/migrate', function () {
         return response('<pre style="font-family:monospace; background:#0f172a; color:#38bdf8; padding:20px; border-radius:8px;">'.e($output).'</pre>');
     } catch (Throwable $e) {
         return response('<pre style="font-family:monospace; background:#450a0a; color:#f87171; padding:20px; border-radius:8px;">Migration Error: '.e($e->getMessage()).'</pre>', 500);
+    }
+});
+
+// Hosting SMTP test helper (instant testing in browser with error diagnostics)
+Route::get('/system/test-email', function () {
+    $secret = request('key');
+    if (! $secret || $secret !== config('app.key')) {
+        abort(403, 'Unauthorized. Please provide ?key= matching your APP_KEY.');
+    }
+
+    $to = request('to');
+    if (! $to || ! filter_var($to, FILTER_VALIDATE_EMAIL)) {
+        return response('<pre style="font-family:monospace; background:#450a0a; color:#f87171; padding:20px; border-radius:8px;">Please provide a valid recipient email: ?to=your_email@gmail.com&key=YOUR_APP_KEY</pre>', 400);
+    }
+
+    try {
+        $otp = (string) random_int(100000, 999999);
+        Mail::to($to)->send(new OtpVerificationMail($otp, 15));
+
+        return response('<pre style="font-family:monospace; background:#0f172a; color:#4ade80; padding:20px; border-radius:8px;">✅ Success! Test verification email with OTP '.$otp.' was sent to '.$to.' using mailer: '.config('mail.default').' (Host: '.config('mail.mailers.smtp.host').':'.config('mail.mailers.smtp.port').')</pre>');
+    } catch (Throwable $e) {
+        return response('<pre style="font-family:monospace; background:#450a0a; color:#f87171; padding:20px; border-radius:8px;">❌ SMTP Error: '.e($e->getMessage()).'</pre>', 500);
     }
 });
