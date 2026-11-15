@@ -181,9 +181,9 @@
                             </td>
                             <td style="text-align:right;">
                                 <div style="display:inline-flex; gap:6px; align-items:center;">
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="showLibraryModal({{ json_encode($lib) }})">
+                                    <a href="{{ route('admin.libraries.show', $lib->id) }}" class="btn btn-secondary btn-sm" title="View Listing, Photos, Timings, Suvidha & Seats">
                                         View
-                                    </button>
+                                    </a>
 
                                     @if($lib->payment_status !== 'paid')
                                         <form action="{{ route('admin.libraries.verify-payment', $lib->id) }}" method="POST" style="display:inline;">

@@ -17,7 +17,7 @@ class AdminPanelTest extends TestCase
     public function test_guest_is_redirected_to_login(): void
     {
         $response = $this->get('/admin');
-        $response->assertRedirect('/admin/login');
+        $response->assertRedirect(route('admin.login'));
     }
 
     public function test_staff_can_login_via_web_form(): void

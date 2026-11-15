@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\Facility;
 use App\Models\Library;
 use App\Models\Payment;
 use App\Models\Plan;
 use App\Models\Seat;
 use App\Models\User;
 use App\Models\Zone;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -190,6 +192,74 @@ class AdminController extends Controller
         ];
 
         return view('admin.libraries', compact('libraries', 'metrics'));
+    }
+
+    /**
+     * Inspect full details of a library for Admin (listing, photos, timings, suvidha, seats).
+     */
+    public function showLibrary(int|string $id): View
+    {
+        $library = Library::with(['owner', 'seats', 'facilities'])->findOrFail($id);
+
+        if ($library->facilities->isEmpty()) {
+            $facilities = Facility::seedDefaultsForLibrary($library->id);
+            $library->setRelation('facilities', $facilities);
+        }
+
+        $seats = $library->seats;
+        $seatStats = [
+            'total' => $seats->count(),
+            'available' => $seats->where('status', 'available')->count(),
+            'occupied' => $seats->where('status', 'occupied')->count(),
+            'reserved' => $seats->where('status', 'reserved')->count(),
+            'maintenance' => $seats->where('status', 'maintenance')->count(),
+        ];
+
+        return view('admin.library-detail', compact('library', 'seatStats'));
+    }
+
+    /**
+     * JSON details of a library for the admin modal.
+     */
+    public function getLibraryJson(int|string $id): JsonResponse
+    {
+        $library = Library::with(['owner', 'seats', 'facilities'])->findOrFail($id);
+
+        if ($library->facilities->isEmpty()) {
+            $facilities = Facility::seedDefaultsForLibrary($library->id);
+            $library->setRelation('facilities', $facilities);
+        }
+
+        $seats = $library->seats;
+        $seatStats = [
+            'total' => $seats->count(),
+            'available' => $seats->where('status', 'available')->count(),
+            'occupied' => $seats->where('status', 'occupied')->count(),
+            'reserved' => $seats->where('status', 'reserved')->count(),
+            'maintenance' => $seats->where('status', 'maintenance')->count(),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'library' => $library,
+            'seatStats' => $seatStats,
+            'facilities' => $library->facilities,
+            'photos' => [
+                'cover' => $library->image ? asset('storage/'.$library->image) : null,
+                'gallery' => collect($library->gallery ?? [])->map(fn ($p) => str_starts_with($p, 'http') ? $p : asset('storage/'.$p))->all(),
+            ],
+            'operating_hours' => $library->operating_hours ?? [
+                'opening_time' => '07:00',
+                'closing_time' => '22:00',
+                'days_open' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+                'shifts' => [
+                    'morning' => ['start' => '07:00', 'end' => '13:00', 'label' => 'Morning Shift'],
+                    'evening' => ['start' => '13:00', 'end' => '19:00', 'label' => 'Evening Shift'],
+                    'full_day' => ['start' => '07:00', 'end' => '22:00', 'label' => 'Full Day'],
+                ],
+                'notes' => 'Open on all days.',
+            ],
+        ]);
     }
 
     /**

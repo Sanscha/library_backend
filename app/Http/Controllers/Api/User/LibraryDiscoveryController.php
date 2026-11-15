@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\Facility;
 use App\Models\Library;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -96,9 +97,29 @@ class LibraryDiscoveryController extends Controller
             ->orderBy('seat_number')
             ->get();
 
+        $facilities = $library->facilities()->get();
+        if ($facilities->isEmpty()) {
+            $facilities = Facility::seedDefaultsForLibrary($library->id);
+        }
+
         return response()->json([
             'success' => true,
             'library' => $library,
+            'photos' => [
+                'cover' => $library->image ? asset('storage/'.$library->image) : null,
+                'gallery' => $library->gallery ?? [],
+            ],
+            'operating_hours' => $library->operating_hours ?? [
+                'opening_time' => '07:00',
+                'closing_time' => '22:00',
+                'days_open' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+                'shifts' => [
+                    'morning' => ['start' => '07:00', 'end' => '13:00', 'label' => 'Morning Shift'],
+                    'evening' => ['start' => '13:00', 'end' => '19:00', 'label' => 'Evening Shift'],
+                    'full_day' => ['start' => '07:00', 'end' => '22:00', 'label' => 'Full Day'],
+                ],
+            ],
+            'facilities' => $facilities,
             'summary' => [
                 'total_seats' => $library->total_seats_count,
                 'available_seats_count' => $library->available_seats_count,

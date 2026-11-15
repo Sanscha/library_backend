@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Booking;
 use App\Models\Complaint;
+use App\Models\Facility;
 use App\Models\Library;
 use App\Models\Payment;
 use App\Models\Seat;
@@ -96,6 +97,85 @@ class AdminApiController extends Controller
             'pagination' => [
                 'current_page' => $libraries->currentPage(),
                 'last_page' => $libraries->lastPage(),
+            ],
+        ], 200);
+    }
+
+    /**
+     * Inspect full library details, photos, timings, facilities/suvidha, and seat availability.
+     */
+    public function getLibrary(int|string $id): JsonResponse
+    {
+        $library = Library::with(['owner:id,name,email,phone,status,created_at,email_verified_at'])
+            ->findOrFail($id);
+
+        // Facilities (seed defaults if not seeded yet)
+        $facilities = $library->facilities()->orderBy('id')->get();
+        if ($facilities->isEmpty()) {
+            $facilities = Facility::seedDefaultsForLibrary($library->id);
+        }
+
+        // Seats & Availability breakdown
+        $seats = $library->seats()->with(['activeBooking.user:id,name,phone,email'])->orderBy('seat_number')->get();
+        $seatsSummary = [
+            'total' => $seats->count(),
+            'available' => $seats->where('status', 'available')->count(),
+            'occupied' => $seats->where('status', 'occupied')->count(),
+            'reserved' => $seats->where('status', 'reserved')->count(),
+            'maintenance' => $seats->where('status', 'maintenance')->count(),
+            'occupancy_percentage' => $seats->count() > 0
+                ? round((($seats->whereIn('status', ['occupied', 'reserved'])->count()) / $seats->count()) * 100, 1)
+                : 0,
+        ];
+
+        return response()->json([
+            'success' => true,
+            'library' => $library,
+            'owner' => $library->owner,
+            'photos' => [
+                'cover_image' => $library->image ? asset('storage/'.$library->image) : null,
+                'cover_path' => $library->image,
+                'gallery' => $library->gallery ?? [],
+                'gallery_count' => count($library->gallery ?? []),
+            ],
+            'operating_hours' => $library->operating_hours ?? [
+                'opening_time' => '07:00',
+                'closing_time' => '22:00',
+                'days_open' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+                'shifts' => [
+                    'morning' => ['start' => '07:00', 'end' => '13:00', 'label' => 'Morning Shift'],
+                    'evening' => ['start' => '13:00', 'end' => '19:00', 'label' => 'Evening Shift'],
+                    'full_day' => ['start' => '07:00', 'end' => '22:00', 'label' => 'Full Day'],
+                ],
+                'notes' => 'Open on all days.',
+            ],
+            'facilities' => [
+                'summary' => [
+                    'total' => $facilities->count(),
+                    'available' => $facilities->where('status', 'available')->count(),
+                    'limited' => $facilities->where('status', 'limited')->count(),
+                    'maintenance' => $facilities->where('status', 'maintenance')->count(),
+                    'unavailable' => $facilities->where('status', 'unavailable')->count(),
+                ],
+                'data' => $facilities,
+            ],
+            'seats' => [
+                'summary' => $seatsSummary,
+                'data' => $seats->map(function ($seat) {
+                    return [
+                        'id' => $seat->id,
+                        'seat_number' => $seat->seat_number,
+                        'status' => $seat->status,
+                        'is_available' => $seat->status === 'available',
+                        'active_booking' => $seat->activeBooking ? [
+                            'id' => $seat->activeBooking->id,
+                            'user_name' => $seat->activeBooking->user?->name,
+                            'user_phone' => $seat->activeBooking->user?->phone,
+                            'shift' => $seat->activeBooking->shift,
+                            'expires_at' => $seat->activeBooking->expires_at,
+                        ] : null,
+                    ];
+                }),
             ],
         ], 200);
     }

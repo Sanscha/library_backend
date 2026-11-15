@@ -9,10 +9,13 @@ Route::get('/', function () {
     return redirect()->route('admin.dashboard');
 });
 
-// Admin Authentication
-Route::get('/admin/login', [AdminController::class, 'loginForm'])->name('admin.login');
+// Admin Authentication (supports both /login and /admin/login)
+Route::get('/login', [AdminController::class, 'loginForm'])->name('admin.login');
+Route::post('/login', [AdminController::class, 'login']);
+Route::get('/admin/login', [AdminController::class, 'loginForm']);
 Route::post('/admin/login', [AdminController::class, 'login']);
 Route::post('/admin/logout', [AdminController::class, 'logout'])->name('admin.logout');
+Route::post('/logout', [AdminController::class, 'logout']);
 
 // Protected Staff & Admin Dashboard Routes
 Route::middleware('staff')->prefix('admin')->name('admin.')->group(function () {
@@ -20,6 +23,8 @@ Route::middleware('staff')->prefix('admin')->name('admin.')->group(function () {
 
     // Libraries & Owners Platform Management
     Route::get('/libraries', [AdminController::class, 'libraries'])->name('libraries');
+    Route::get('/libraries/{id}', [AdminController::class, 'showLibrary'])->name('libraries.show');
+    Route::get('/libraries/{id}/details-json', [AdminController::class, 'getLibraryJson'])->name('libraries.details-json');
     Route::post('/libraries/{id}/toggle-status', [AdminController::class, 'toggleLibraryStatus'])->name('libraries.toggle-status');
     Route::post('/libraries/{id}/verify-payment', [AdminController::class, 'verifyLibraryPayment'])->name('libraries.verify-payment');
 

@@ -223,4 +223,39 @@ class ManagerAuthController extends Controller
             'token' => $token,
         ], 200);
     }
+
+    /**
+     * Get authenticated manager profile and linked library.
+     */
+    public function me(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $library = $user->library;
+
+        return response()->json([
+            'success' => true,
+            'manager' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'role' => $user->role,
+                'email_verified' => $user->isEmailVerified(),
+            ],
+            'library' => $library,
+        ], 200);
+    }
+
+    /**
+     * Manager logout and revoke current token.
+     */
+    public function logout(Request $request): JsonResponse
+    {
+        $request->user()->currentAccessToken()?->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Manager logged out successfully.',
+        ], 200);
+    }
 }

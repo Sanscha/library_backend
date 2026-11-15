@@ -23,6 +23,7 @@ class Library extends Model
         'name',
         'slug',
         'image',
+        'gallery',
         'address',
         'city',
         'state',
@@ -33,6 +34,7 @@ class Library extends Model
         'email',
         'description',
         'amenities',
+        'operating_hours',
         'total_seats',
         'registration_fee',
         'payment_status',
@@ -48,6 +50,8 @@ class Library extends Model
     {
         return [
             'amenities' => 'array',
+            'gallery' => 'array',
+            'operating_hours' => 'array',
             'latitude' => 'float',
             'longitude' => 'float',
             'total_seats' => 'integer',

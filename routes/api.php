@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\ComplaintController;
 use App\Http\Controllers\Api\FacilityController;
 use App\Http\Controllers\Api\Manager\ManagerAuthController;
+use App\Http\Controllers\Api\Manager\ManagerLibraryController;
 use App\Http\Controllers\Api\Manager\ManagerPaymentController;
 use App\Http\Controllers\Api\Manager\ManagerSeatController;
 use App\Http\Controllers\Api\MembershipController;
@@ -78,15 +79,41 @@ Route::prefix('manager')->group(function () {
 
     // Manager Protected Controls
     Route::middleware(['auth:sanctum', 'manager'])->group(function () {
-        Route::get('/payment/details', [ManagerPaymentController::class, 'getPaymentDetails']);
-        Route::post('/payment/verify', [ManagerPaymentController::class, 'verifyPayment']);
+        // Manager Profile & Session
+        Route::get('/me', [ManagerAuthController::class, 'me']);
+        Route::post('/logout', [ManagerAuthController::class, 'logout']);
 
+        // Listing Profile & Details
+        Route::get('/library/profile', [ManagerLibraryController::class, 'getProfile']);
+        Route::put('/library/listing', [ManagerLibraryController::class, 'updateListing']);
+        Route::put('/library/profile', [ManagerLibraryController::class, 'updateListing']);
+
+        // Listing Photos & Gallery Management
+        Route::post('/library/photos', [ManagerLibraryController::class, 'uploadPhotos']);
+        Route::delete('/library/photos', [ManagerLibraryController::class, 'deletePhoto']);
+
+        // Library Operating Hours & Shift Timings
+        Route::get('/library/timings', [ManagerLibraryController::class, 'getTimings']);
+        Route::put('/library/timings', [ManagerLibraryController::class, 'updateTimings']);
+
+        // Suvidha / Facilities Management (Wi-Fi, AC, Charging, Lockers, Water, Washrooms)
+        Route::get('/library/facilities', [ManagerLibraryController::class, 'getFacilities']);
+        Route::post('/library/facilities', [ManagerLibraryController::class, 'storeFacility']);
+        Route::put('/library/facilities/{id}', [ManagerLibraryController::class, 'updateFacility']);
+        Route::delete('/library/facilities/{id}', [ManagerLibraryController::class, 'destroyFacility']);
+
+        // Seat Management & Live Availability
         Route::get('/dashboard', [ManagerSeatController::class, 'dashboard']);
-        Route::post('/seats/setup', [ManagerSeatController::class, 'setupSeats']);
+        Route::get('/seats/availability', [ManagerLibraryController::class, 'getSeatAvailability']);
         Route::get('/seats', [ManagerSeatController::class, 'index']);
+        Route::post('/seats/setup', [ManagerSeatController::class, 'setupSeats']);
         Route::post('/seats', [ManagerSeatController::class, 'store']);
         Route::put('/seats/{id}/status', [ManagerSeatController::class, 'updateStatus']);
         Route::delete('/seats/{id}', [ManagerSeatController::class, 'destroy']);
+
+        // Onboarding Fee Payments
+        Route::get('/payment/details', [ManagerPaymentController::class, 'getPaymentDetails']);
+        Route::post('/payment/verify', [ManagerPaymentController::class, 'verifyPayment']);
     });
 });
 
@@ -99,6 +126,7 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'staff'])->group(function ()
     Route::get('/dashboard', [AdminApiController::class, 'getDashboardMetrics']);
     Route::get('/users', [AdminApiController::class, 'getUsers']);
     Route::get('/libraries', [AdminApiController::class, 'getLibraries']);
+    Route::get('/libraries/{id}', [AdminApiController::class, 'getLibrary']);
     Route::get('/seats', [AdminApiController::class, 'getSeatsOverview']);
     Route::get('/payments', [AdminApiController::class, 'getPayments']);
 
