@@ -79,6 +79,36 @@ Route::get('/system/migrate', function () {
     }
 });
 
+// System cache clearing helper (clears bootstrap/cache/config.php and view/route cache)
+Route::get('/system/clear-cache', function () {
+    $secret = request('key');
+    if (! $secret || $secret !== config('app.key')) {
+        abort(403, 'Unauthorized. Please provide ?key= matching your APP_KEY.');
+    }
+
+    try {
+        $cachedConfig = app()->getCachedConfigPath();
+        $deleted = false;
+        if (file_exists($cachedConfig)) {
+            $deleted = @unlink($cachedConfig);
+        }
+
+        Artisan::call('config:clear');
+        Artisan::call('cache:clear');
+        Artisan::call('route:clear');
+        Artisan::call('view:clear');
+
+        $output = "✅ All caches successfully cleared!\n";
+        $output .= 'Cached config file removed: '.($deleted ? 'Yes' : 'Was not cached')."\n";
+        $output .= 'Active Mailer: '.config('mail.default')."\n";
+        $output .= 'Active SMTP Host: '.config('mail.mailers.smtp.host')."\n";
+
+        return response('<pre style="font-family:monospace; background:#0f172a; color:#4ade80; padding:20px; border-radius:8px;">'.e($output).'</pre>');
+    } catch (Throwable $e) {
+        return response('<pre style="font-family:monospace; background:#450a0a; color:#f87171; padding:20px; border-radius:8px;">Cache Clear Error: '.e($e->getMessage()).'</pre>', 500);
+    }
+});
+
 // Hosting SMTP test helper (instant testing in browser with error diagnostics)
 Route::get('/system/test-email', function () {
     $secret = request('key');
@@ -86,17 +116,38 @@ Route::get('/system/test-email', function () {
         abort(403, 'Unauthorized. Please provide ?key= matching your APP_KEY.');
     }
 
+    // Auto-remove cached config if it was present
+    $cachedConfig = app()->getCachedConfigPath();
+    if (file_exists($cachedConfig)) {
+        @unlink($cachedConfig);
+        try {
+            Artisan::call('config:clear');
+        } catch (Throwable $e) {
+        }
+
+        return response('<pre style="font-family:monospace; background:#0f172a; color:#38bdf8; padding:20px; border-radius:8px;">⚡ Laravel configuration cache was detected and has been automatically DELETED!&#10;&#10;Please REFRESH this page now (or press F5) so Laravel reloads your new .env SMTP settings into memory.</pre>');
+    }
+
     $to = request('to');
     if (! $to || ! filter_var($to, FILTER_VALIDATE_EMAIL)) {
         return response('<pre style="font-family:monospace; background:#450a0a; color:#f87171; padding:20px; border-radius:8px;">Please provide a valid recipient email: ?to=your_email@gmail.com&key=YOUR_APP_KEY</pre>', 400);
+    }
+
+    $mailer = config('mail.default');
+    $host = config('mail.mailers.smtp.host');
+    $port = config('mail.mailers.smtp.port');
+    $username = config('mail.mailers.smtp.username');
+
+    if ($mailer === 'log') {
+        return response('<pre style="font-family:monospace; background:#78350f; color:#fef08a; padding:20px; border-radius:8px;">⚠️ NOTICE: MAIL_MAILER is still set to "log" (Host: '.$host.':'.$port.').&#10;&#10;In your .env file on Hostinger, make sure you have:&#10;MAIL_MAILER=smtp&#10;MAIL_HOST=smtp.gmail.com (or smtp.hostinger.com)&#10;MAIL_PORT=587 (or 465)&#10;&#10;Also check if there are DUPLICATE lines in .env (remove the old MAIL_MAILER=log line if there are two).</pre>', 200);
     }
 
     try {
         $otp = (string) random_int(100000, 999999);
         Mail::to($to)->send(new OtpVerificationMail($otp, 15));
 
-        return response('<pre style="font-family:monospace; background:#0f172a; color:#4ade80; padding:20px; border-radius:8px;">✅ Success! Test verification email with OTP '.$otp.' was sent to '.$to.' using mailer: '.config('mail.default').' (Host: '.config('mail.mailers.smtp.host').':'.config('mail.mailers.smtp.port').')</pre>');
+        return response('<pre style="font-family:monospace; background:#0f172a; color:#4ade80; padding:20px; border-radius:8px;">✅ Success! Test verification email with OTP '.$otp.' was sent to '.$to.' using mailer: '.$mailer.' (Host: '.$host.':'.$port.', User: '.$username.')</pre>');
     } catch (Throwable $e) {
-        return response('<pre style="font-family:monospace; background:#450a0a; color:#f87171; padding:20px; border-radius:8px;">❌ SMTP Error: '.e($e->getMessage()).'</pre>', 500);
+        return response('<pre style="font-family:monospace; background:#450a0a; color:#f87171; padding:20px; border-radius:8px;">❌ SMTP Error: '.e($e->getMessage()).'&#10;&#10;Mailer: '.$mailer.'&#10;Host: '.$host.':'.$port.'&#10;Username: '.$username.'</pre>', 500);
     }
 });
