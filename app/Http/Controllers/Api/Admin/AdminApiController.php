@@ -10,6 +10,7 @@ use App\Models\Facility;
 use App\Models\Library;
 use App\Models\Payment;
 use App\Models\Seat;
+use App\Models\Setting;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\WaitingList;
@@ -322,6 +323,50 @@ class AdminApiController extends Controller
                 'last_page' => $payments->lastPage(),
                 'total' => $payments->total(),
             ],
+        ], 200);
+    }
+
+    /**
+     * Get platform settings via API.
+     */
+    public function getSettings(): JsonResponse
+    {
+        $settings = Setting::getAll();
+
+        return response()->json([
+            'success' => true,
+            'settings' => $settings,
+        ], 200);
+    }
+
+    /**
+     * Update platform settings (e.g. library registration fee) via API.
+     */
+    public function updateSettings(Request $request): JsonResponse
+    {
+        $fields = $request->validate([
+            'library_registration_fee' => 'required|numeric|min:0',
+            'platform_name' => 'nullable|string|max:100',
+            'support_email' => 'nullable|email|max:150',
+            'support_phone' => 'nullable|string|max:30',
+        ]);
+
+        Setting::set('library_registration_fee', (string) $fields['library_registration_fee'], 'pricing', 'One-time onboarding fee for library owners');
+
+        if (array_key_exists('platform_name', $fields)) {
+            Setting::set('platform_name', $fields['platform_name'] ?? 'SeatSync', 'general', 'Platform Name');
+        }
+        if (array_key_exists('support_email', $fields)) {
+            Setting::set('support_email', $fields['support_email'] ?? '', 'general', 'Support Email');
+        }
+        if (array_key_exists('support_phone', $fields)) {
+            Setting::set('support_phone', $fields['support_phone'] ?? '', 'general', 'Support Phone');
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Settings updated successfully.',
+            'settings' => Setting::getAll(),
         ], 200);
     }
 }

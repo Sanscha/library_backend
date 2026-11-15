@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Manager;
 
 use App\Http\Controllers\Controller;
 use App\Models\Library;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\OtpService;
 use App\Services\PaymentService;
@@ -74,7 +75,7 @@ class ManagerAuthController extends Controller
             }
         }
 
-        $regFee = isset($fields['registration_fee']) ? (float) $fields['registration_fee'] : 999.00;
+        $regFee = (float) Setting::get('library_registration_fee', 999.00);
 
         // 3. Create Library Record
         $library = Library::create([

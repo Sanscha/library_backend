@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Library;
 use App\Models\Plan;
+use App\Models\Setting;
 use App\Models\User;
 use App\Models\Zone;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -226,59 +227,74 @@ class AdminPanelTest extends TestCase
         ]);
     }
 
-    public function test_staff_can_update_one_time_library_registration_fee_via_web(): void
+    public function test_staff_can_view_settings_page(): void
     {
         $staff = User::factory()->create(['role' => 'staff']);
-        $owner = User::factory()->create(['role' => 'manager']);
-        $library = Library::create([
-            'user_id' => $owner->id,
-            'name' => 'Elite Study Hub',
-            'slug' => 'elite-study-hub',
-            'address' => 'JM Road, Pune',
-            'registration_fee' => 999.00,
-            'payment_status' => 'unpaid',
-            'status' => 'pending_payment',
-        ]);
 
-        $response = $this->actingAs($staff)->post("/admin/libraries/{$library->id}/update-fee", [
-            'registration_fee' => 1499.00,
+        $response = $this->actingAs($staff)->get('/admin/settings');
+
+        $response->assertStatus(200)
+            ->assertSee('Platform Settings')
+            ->assertSee('Library Onboarding Fee (One-Time)')
+            ->assertSee('999.00');
+    }
+
+    public function test_staff_can_update_platform_registration_fee_in_settings(): void
+    {
+        $staff = User::factory()->create(['role' => 'staff']);
+
+        $response = $this->actingAs($staff)->post('/admin/settings', [
+            'library_registration_fee' => 1499.00,
+            'platform_name' => 'SeatSync Pro',
         ]);
 
         $response->assertSessionHas('success');
-        $this->assertDatabaseHas('libraries', [
-            'id' => $library->id,
-            'registration_fee' => 1499.00,
+        $this->assertDatabaseHas('settings', [
+            'key' => 'library_registration_fee',
+            'value' => '1499',
         ]);
+        $this->assertEquals('1499', Setting::get('library_registration_fee'));
     }
 
-    public function test_admin_can_update_one_time_library_registration_fee_via_api(): void
+    public function test_admin_can_update_settings_via_api(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $owner = User::factory()->create(['role' => 'manager']);
-        $library = Library::create([
-            'user_id' => $owner->id,
-            'name' => 'Apex Reading Lounge',
-            'slug' => 'apex-reading-lounge',
-            'address' => 'Kothrud, Pune',
-            'registration_fee' => 999.00,
-            'payment_status' => 'unpaid',
-            'status' => 'pending_payment',
-        ]);
-
         $token = $admin->createToken('admin_token')->plainTextToken;
 
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
-            ->putJson("/api/admin/libraries/{$library->id}/fee", [
-                'registration_fee' => 499.00,
+            ->putJson('/api/admin/settings', [
+                'library_registration_fee' => 1999.00,
             ]);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
-            ->assertJsonPath('library.registration_fee', '499.00');
+            ->assertJsonPath('settings.library_registration_fee', '1999');
+
+        $this->assertEquals('1999', Setting::get('library_registration_fee'));
+    }
+
+    public function test_newly_registered_library_uses_admin_configured_registration_fee(): void
+    {
+        // Admin configures fee in Settings
+        Setting::set('library_registration_fee', '1299.00');
+
+        $response = $this->postJson('/api/manager/auth/register', [
+            'name' => 'New Owner Prakash',
+            'email' => 'prakash@test.com',
+            'phone' => '9822001122',
+            'password' => 'secret123',
+            'library_name' => 'Prakash Study Lounge',
+            'address' => 'Station Road, Pune',
+        ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('library.registration_fee', '1299.00')
+            ->assertJsonPath('payment.amount', 1299);
 
         $this->assertDatabaseHas('libraries', [
-            'id' => $library->id,
-            'registration_fee' => 499.00,
+            'name' => 'Prakash Study Lounge',
+            'registration_fee' => 1299.00,
         ]);
     }
 }

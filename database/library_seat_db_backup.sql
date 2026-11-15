@@ -350,7 +350,7 @@ CREATE TABLE `libraries` (
 
 LOCK TABLES `libraries` WRITE;
 /*!40000 ALTER TABLE `libraries` DISABLE KEYS */;
-INSERT INTO `libraries` VALUES (1,6,'Apex Central Study Hub','apex-central-study-hub',NULL,NULL,'402 Prestige Point, Shukrawar Peth','Pune','Maharashtra','411002',NULL,NULL,'9822001122','contact@apexcentral.in','Premium air-conditioned study hall with high-speed WiFi and individual ergonomic seating.','[\"High Speed WiFi\",\"Air Conditioned\",\"Power Outlets\",\"RO Water Dispenser\",\"CCTV Security\"]',NULL,60,499.00,'paid','active','2026-11-14 09:44:37','2026-11-14 09:44:37'),(2,7,'Study Haven Reading Room','study-haven-reading-room',NULL,NULL,'12 Near Modern College, Shivajinagar','Pune','Maharashtra','411005',NULL,NULL,'9822003344','info@studyhaven.in','Dedicated silent reading room designed for UPSC and competitive exam aspirants.','[\"Silent Zones\",\"Newspaper Desk\",\"Lockers\",\"Power Sockets\"]',NULL,40,499.00,'unpaid','pending_payment','2026-11-14 09:44:37','2026-11-14 09:44:37');
+INSERT INTO `libraries` VALUES (1,6,'Apex Central Study Hub','apex-central-study-hub',NULL,NULL,'402 Prestige Point, Shukrawar Peth','Pune','Maharashtra','411002',NULL,NULL,'9822001122','contact@apexcentral.in','Premium air-conditioned study hall with high-speed WiFi and individual ergonomic seating.','[\"High Speed WiFi\",\"Air Conditioned\",\"Power Outlets\",\"RO Water Dispenser\",\"CCTV Security\"]',NULL,60,499.00,'paid','active','2026-11-14 09:44:37','2026-11-14 09:44:37'),(2,7,'Study Haven Reading Room','study-haven-reading-room',NULL,NULL,'12 Near Modern College, Shivajinagar','Pune','Maharashtra','411005',NULL,NULL,'9822003344','info@studyhaven.in','Dedicated silent reading room designed for UPSC and competitive exam aspirants.','[\"Silent Zones\",\"Newspaper Desk\",\"Lockers\",\"Power Sockets\"]',NULL,40,499.00,'paid','active','2026-11-14 09:44:37','2026-11-15 02:26:34');
 /*!40000 ALTER TABLE `libraries` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -366,7 +366,7 @@ CREATE TABLE `migrations` (
   `migration` varchar(255) NOT NULL,
   `batch` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -375,7 +375,7 @@ CREATE TABLE `migrations` (
 
 LOCK TABLES `migrations` WRITE;
 /*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
-INSERT INTO `migrations` VALUES (1,'0001_01_01_000000_create_users_table',1),(2,'0001_01_01_000001_create_cache_table',1),(3,'0001_01_01_000002_create_jobs_table',1),(4,'2026_10_29_000001_create_library_seats_tables',1),(5,'2026_10_29_000002_create_plans_and_payments_tables',1),(6,'2026_10_29_160444_create_personal_access_tokens_table',1),(7,'2026_10_31_000001_create_libraries_and_otps_tables',1),(8,'2026_11_14_150844_create_library_advanced_features_tables',1),(9,'2026_11_15_073457_add_gallery_and_operating_hours_to_libraries_table',2);
+INSERT INTO `migrations` VALUES (1,'0001_01_01_000000_create_users_table',1),(2,'0001_01_01_000001_create_cache_table',1),(3,'0001_01_01_000002_create_jobs_table',1),(4,'2026_10_29_000001_create_library_seats_tables',1),(5,'2026_10_29_000002_create_plans_and_payments_tables',1),(6,'2026_10_29_160444_create_personal_access_tokens_table',1),(7,'2026_10_31_000001_create_libraries_and_otps_tables',1),(8,'2026_11_14_150844_create_library_advanced_features_tables',1),(9,'2026_11_15_073457_add_gallery_and_operating_hours_to_libraries_table',2),(10,'2026_11_15_075450_create_settings_table',3);
 /*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -535,7 +535,7 @@ CREATE TABLE `payments` (
   CONSTRAINT `payments_library_id_foreign` FOREIGN KEY (`library_id`) REFERENCES `libraries` (`id`) ON DELETE CASCADE,
   CONSTRAINT `payments_plan_id_foreign` FOREIGN KEY (`plan_id`) REFERENCES `plans` (`id`) ON DELETE SET NULL,
   CONSTRAINT `payments_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -544,7 +544,7 @@ CREATE TABLE `payments` (
 
 LOCK TABLES `payments` WRITE;
 /*!40000 ALTER TABLE `payments` DISABLE KEYS */;
-INSERT INTO `payments` VALUES (1,3,1,NULL,1,1,80.00,'seat_booking','INR','cash','TXN-CASH-1001','completed','Counter cash payment paid to reception.','2026-11-14 09:44:37','2026-11-14 09:44:37'),(2,4,NULL,NULL,3,1,150.00,'seat_booking','INR','upi','UPI-9822334455@okaxis-01','completed','Direct QR scan UPI payment.','2026-11-14 09:44:37','2026-11-14 09:44:37'),(3,5,NULL,NULL,4,NULL,2200.00,'seat_booking','INR','online_razorpay','pay_rzp_f59bf7857804a2','completed','Online payment via Razorpay checkout.','2026-11-14 09:44:37','2026-11-14 09:44:37');
+INSERT INTO `payments` VALUES (1,3,1,NULL,1,1,80.00,'seat_booking','INR','cash','TXN-CASH-1001','completed','Counter cash payment paid to reception.','2026-11-14 09:44:37','2026-11-14 09:44:37'),(2,4,NULL,NULL,3,1,150.00,'seat_booking','INR','upi','UPI-9822334455@okaxis-01','completed','Direct QR scan UPI payment.','2026-11-14 09:44:37','2026-11-14 09:44:37'),(3,5,NULL,NULL,4,NULL,2200.00,'seat_booking','INR','online_razorpay','pay_rzp_f59bf7857804a2','completed','Online payment via Razorpay checkout.','2026-11-14 09:44:37','2026-11-14 09:44:37'),(4,7,NULL,2,NULL,2,499.00,'library_registration','INR','upi','ADM-VERIFY-20261115075634-695H','completed','Manually verified and activated by Admin Library Admin','2026-11-15 02:26:34','2026-11-15 02:26:34');
 /*!40000 ALTER TABLE `payments` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -672,8 +672,37 @@ CREATE TABLE `sessions` (
 
 LOCK TABLES `sessions` WRITE;
 /*!40000 ALTER TABLE `sessions` DISABLE KEYS */;
-INSERT INTO `sessions` VALUES ('7ujeSG8uUECwcdkrn9Trhx0KRJPmpVE6vftagJ0o',2,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36','eyJfdG9rZW4iOiJKVXN3Z0VmamhNblRmMGdVS3dNWWJYSDdsY0JrbTRabmp4SndHZENmIiwiX3ByZXZpb3VzIjp7InVybCI6Imh0dHA6XC9cLzEyNy4wLjAuMTo4MDAwXC9hZG1pblwvdXNlcnMiLCJyb3V0ZSI6ImFkbWluLnVzZXJzIn0sIl9mbGFzaCI6eyJvbGQiOltdLCJuZXciOltdfSwibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiOjIsInBhc3N3b3JkX2hhc2hfd2ViIjoiOGQ2OWVkMmI4ODY3ODYxNjQyNTgyMjJiZmJjNzdkNDcwNDhhZDk4N2Y5MjcwM2JlZTJkNTMxYThlYzAyMzY0OSJ9',1794729151);
+INSERT INTO `sessions` VALUES ('7ujeSG8uUECwcdkrn9Trhx0KRJPmpVE6vftagJ0o',2,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36','eyJfdG9rZW4iOiJKVXN3Z0VmamhNblRmMGdVS3dNWWJYSDdsY0JrbTRabmp4SndHZENmIiwiX3ByZXZpb3VzIjp7InVybCI6Imh0dHA6XC9cLzEyNy4wLjAuMTo4MDAwXC9hZG1pblwvbGlicmFyaWVzIiwicm91dGUiOiJhZG1pbi5saWJyYXJpZXMifSwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119LCJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI6MiwicGFzc3dvcmRfaGFzaF93ZWIiOiI4ZDY5ZWQyYjg4Njc4NjE2NDI1ODIyMmJmYmM3N2Q0NzA0OGFkOTg3ZjkyNzAzYmVlMmQ1MzFhOGVjMDIzNjQ5In0=',1794729436);
 /*!40000 ALTER TABLE `sessions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `settings`
+--
+
+DROP TABLE IF EXISTS `settings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `settings` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `key` varchar(255) NOT NULL,
+  `value` text DEFAULT NULL,
+  `group` varchar(255) NOT NULL DEFAULT 'general',
+  `description` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `settings_key_unique` (`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `settings`
+--
+
+LOCK TABLES `settings` WRITE;
+/*!40000 ALTER TABLE `settings` DISABLE KEYS */;
+/*!40000 ALTER TABLE `settings` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -874,4 +903,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-11-15 13:22:37
+-- Dump completed on 2026-11-15 13:28:11

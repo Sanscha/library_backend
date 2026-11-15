@@ -131,6 +131,10 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'staff'])->group(function ()
     Route::get('/seats', [AdminApiController::class, 'getSeatsOverview']);
     Route::get('/payments', [AdminApiController::class, 'getPayments']);
 
+    // Platform Settings (One-Time Library Registration Fee, etc.)
+    Route::get('/settings', [AdminApiController::class, 'getSettings']);
+    Route::put('/settings', [AdminApiController::class, 'updateSettings']);
+
     // Admin Facility & Notice Management
     Route::put('/facilities/{id}', [FacilityController::class, 'updateStatus']);
     Route::post('/notices', [NoticeController::class, 'store']);

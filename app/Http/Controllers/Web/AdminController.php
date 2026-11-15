@@ -9,6 +9,7 @@ use App\Models\Library;
 use App\Models\Payment;
 use App\Models\Plan;
 use App\Models\Seat;
+use App\Models\Setting;
 use App\Models\User;
 use App\Models\Zone;
 use Illuminate\Http\JsonResponse;
@@ -697,5 +698,42 @@ class AdminController extends Controller
         $plan->save();
 
         return back()->with('success', "Plan '{$plan->name}' status updated.");
+    }
+
+    /**
+     * Platform Settings view (Configure library one-time onboarding fee, etc.).
+     */
+    public function settings(): View
+    {
+        $settings = Setting::getAll();
+
+        return view('admin.settings', compact('settings'));
+    }
+
+    /**
+     * Update Platform Settings (One-Time Onboarding Fee, etc.).
+     */
+    public function updateSettings(Request $request): RedirectResponse
+    {
+        $fields = $request->validate([
+            'library_registration_fee' => 'required|numeric|min:0',
+            'platform_name' => 'nullable|string|max:100',
+            'support_email' => 'nullable|email|max:150',
+            'support_phone' => 'nullable|string|max:30',
+        ]);
+
+        Setting::set('library_registration_fee', (string) $fields['library_registration_fee'], 'pricing', 'One-time onboarding fee for library owners');
+
+        if (array_key_exists('platform_name', $fields)) {
+            Setting::set('platform_name', $fields['platform_name'] ?? 'SeatSync', 'general', 'Platform Name');
+        }
+        if (array_key_exists('support_email', $fields)) {
+            Setting::set('support_email', $fields['support_email'] ?? '', 'general', 'Support Email');
+        }
+        if (array_key_exists('support_phone', $fields)) {
+            Setting::set('support_phone', $fields['support_phone'] ?? '', 'general', 'Support Phone');
+        }
+
+        return back()->with('success', 'Settings updated successfully. New library registrations will be charged ₹'.number_format((float) $fields['library_registration_fee'], 2).'.');
     }
 }

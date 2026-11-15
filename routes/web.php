@@ -51,6 +51,10 @@ Route::middleware('staff')->prefix('admin')->name('admin.')->group(function () {
     Route::post('/payments', [AdminController::class, 'storePayment'])->name('payments.store');
     Route::post('/plans', [AdminController::class, 'storePlan'])->name('plans.store');
     Route::post('/plans/{id}/toggle', [AdminController::class, 'togglePlan'])->name('plans.toggle');
+
+    // Platform Settings (One-Time Library Registration Fee, etc.)
+    Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
+    Route::post('/settings', [AdminController::class, 'updateSettings'])->name('settings.update');
 });
 
 // Hosting migration helper (convenient for shared hosting like InfinityFree with no SSH access)
