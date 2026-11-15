@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -26,7 +27,14 @@ class OtpVerificationMail extends Mailable
      */
     public function envelope(): Envelope
     {
+        $fromAddress = config('mail.from.address');
+        if ((! $fromAddress || $fromAddress === 'hello@example.com') && config('mail.mailers.smtp.username')) {
+            $fromAddress = config('mail.mailers.smtp.username');
+        }
+        $fromName = config('mail.from.name') ?: 'SeatSync Library';
+
         return new Envelope(
+            from: new Address($fromAddress, $fromName),
             subject: "Your SeatSync Verification Code: {$this->otp}",
         );
     }
