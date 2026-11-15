@@ -49,8 +49,6 @@ Route::middleware('staff')->prefix('admin')->name('admin.')->group(function () {
     // Payments & Billing Module
     Route::get('/payments', [AdminController::class, 'payments'])->name('payments');
     Route::post('/payments', [AdminController::class, 'storePayment'])->name('payments.store');
-    Route::post('/plans', [AdminController::class, 'storePlan'])->name('plans.store');
-    Route::post('/plans/{id}/toggle', [AdminController::class, 'togglePlan'])->name('plans.toggle');
 
     // Platform Settings (One-Time Library Registration Fee, etc.)
     Route::get('/settings', [AdminController::class, 'settings'])->name('settings');

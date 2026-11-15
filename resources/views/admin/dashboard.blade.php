@@ -5,7 +5,7 @@
 @section('topbar_actions')
     <a href="{{ route('admin.libraries') }}" class="btn btn-secondary btn-sm">Libraries ({{ $totalLibraries }})</a>
     <a href="{{ route('admin.users') }}" class="btn btn-secondary btn-sm">Users ({{ $totalMembers }})</a>
-    <a href="{{ route('admin.payments') }}" class="btn btn-primary btn-sm">Razorpay Payments</a>
+    <a href="{{ route('admin.payments') }}" class="btn btn-primary btn-sm">Payments & Revenue</a>
 @endsection
 
 @section('content')
@@ -16,7 +16,7 @@
         <div class="card" style="padding: 18px 20px;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <div>
-                    <div style="font-size:12px; font-weight:500; color:var(--text-muted);">Total Razorpay Revenue</div>
+                    <div style="font-size:12px; font-weight:500; color:var(--text-muted);">Total Revenue</div>
                     <div style="font-size:26px; font-weight:700; margin-top:4px; color:var(--text-primary);">
                         ₹{{ number_format($totalRevenue, 2) }}
                     </div>
@@ -92,11 +92,11 @@
     <!-- Main 2-Column Dashboard Grid: Payments & Libraries -->
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px; margin-bottom:24px;">
 
-        <!-- Recent Razorpay Payments -->
+        <!-- Recent Payments -->
         <div class="card">
             <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
                 <div>
-                    <div class="card-title">Recent Razorpay Payments</div>
+                    <div class="card-title">Recent Payments</div>
                     <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">Incoming transactions</div>
                 </div>
                 <a href="{{ route('admin.payments') }}" class="btn btn-secondary btn-sm">View All Payments &rarr;</a>
@@ -141,7 +141,7 @@
                         @empty
                             <tr>
                                 <td colspan="4" style="text-align:center; padding:24px; color:var(--text-muted);">
-                                    No Razorpay transactions recorded yet.
+                                    No transactions recorded yet.
                                 </td>
                             </tr>
                         @endforelse

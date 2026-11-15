@@ -81,7 +81,7 @@ class AdminPanelTest extends TestCase
         $response = $this->actingAs($staff)->get('/admin');
 
         $response->assertStatus(200)
-            ->assertSee('Total Razorpay Revenue')
+            ->assertSee('Total Revenue')
             ->assertSee('Registered Libraries');
     }
 

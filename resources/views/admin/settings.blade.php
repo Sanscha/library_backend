@@ -27,7 +27,7 @@
                         </div>
                         <div>
                             <div class="card-title" style="color:#1e40af;">Library Onboarding Fee (One-Time)</div>
-                            <div style="font-size: 12px; color: #3b82f6;">Charged to each library owner upon signup via Razorpay / UPI</div>
+                            <div style="font-size: 12px; color: #3b82f6;">Charged to each library owner upon signup via Online / UPI</div>
                         </div>
                     </div>
                 </div>
@@ -52,7 +52,7 @@
 
                     <div style="padding: 14px 16px; background: #f8fafc; border: 1px dashed var(--border-color); border-radius: 6px; font-size: 12.5px; color: var(--text-secondary); line-height: 1.5;">
                         <strong style="color:var(--text-primary);">How this works:</strong>
-                        When any new library owner registers their branch on the platform, this exact fee is charged. The owner is prompted to complete payment via your connected <strong>Razorpay Account</strong> (UPI QR or Card/NetBanking) before their branch is activated.
+                        When any new library owner registers their branch on the platform, this exact fee is charged. The owner is prompted to complete payment (UPI QR or Online payment) before their branch is activated.
                     </div>
                 </div>
             </div>

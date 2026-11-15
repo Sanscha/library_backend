@@ -1,9 +1,8 @@
 @extends('layouts.admin')
 
-@section('title', 'Razorpay Payments & Transactions')
+@section('title', 'Payments & Transactions')
 
 @section('topbar_actions')
-    <button type="button" class="btn btn-secondary btn-sm" onclick="openModal('addPlanModal')">+ Add Plan</button>
     <button type="button" class="btn btn-primary btn-sm" onclick="openModal('recordPaymentModal')">Record Payment</button>
 @endsection
 
@@ -47,42 +46,7 @@
                 ₹{{ number_format($metrics['onlineTotal'] + $metrics['cashTotal'], 2) }}
             </div>
             <div style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
-                Razorpay: ₹{{ number_format($metrics['onlineTotal'], 0) }} • Cash: ₹{{ number_format($metrics['cashTotal'], 0) }}
-            </div>
-        </div>
-    </div>
-
-    <!-- Active Pricing & Membership Plans -->
-    <div class="card" style="margin-bottom: 24px;">
-        <div class="card-header">
-            <div class="card-title">Study Pass Plans</div>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="openModal('addPlanModal')">+ New Plan</button>
-        </div>
-        <div class="card-body">
-            <div class="grid grid-cols-4">
-                @foreach($plans as $plan)
-                    <div class="card" style="padding: 14px 16px; background: #fafafa; border-color: var(--border-color); display:flex; flex-direction:column; justify-content:space-between;">
-                        <div>
-                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                                <h4 style="font-size:13.5px; font-weight:600; color:var(--text-primary);">{{ $plan->name }}</h4>
-                                <span class="badge {{ $plan->is_active ? 'badge-active' : 'badge-maintenance' }}">
-                                    {{ $plan->is_active ? 'Active' : 'Disabled' }}
-                                </span>
-                            </div>
-                            <div style="font-size:20px; font-weight:600; color:#15803d; margin: 6px 0 2px;">
-                                ₹{{ number_format($plan->price, 0) }}
-                                <span style="font-size:11.5px; font-weight:400; color:var(--text-muted);">/ {{ $plan->duration_days }} {{ Str::plural('day', $plan->duration_days) }}</span>
-                            </div>
-                            <p style="font-size:12px; color:var(--text-secondary); margin-bottom:10px;">{{ $plan->description ?? 'Standard study access.' }}</p>
-                        </div>
-                        <form action="{{ route('admin.plans.toggle', $plan->id) }}" method="POST">
-                            @csrf
-                            <button type="submit" class="btn btn-secondary btn-sm" style="width:100%; font-size:11.5px;">
-                                {{ $plan->is_active ? 'Disable' : 'Enable' }}
-                            </button>
-                        </form>
-                    </div>
-                @endforeach
+                Online: ₹{{ number_format($metrics['onlineTotal'], 0) }} • Cash: ₹{{ number_format($metrics['cashTotal'], 0) }}
             </div>
         </div>
     </div>
@@ -97,11 +61,12 @@
                     <option value="">All Types</option>
                     <option value="library_registration" {{ request('type') == 'library_registration' ? 'selected' : '' }}>Library Registration</option>
                     <option value="seat_booking" {{ request('type') == 'seat_booking' ? 'selected' : '' }}>Seat Pass</option>
+                    <option value="membership_plan" {{ request('type') == 'membership_plan' ? 'selected' : '' }}>Membership Plan</option>
                 </select>
-                <select name="payment_method" class="form-control" style="max-width: 140px;">
+                <select name="payment_method" class="form-control" style="max-width: 150px;">
                     <option value="">All Methods</option>
                     <option value="upi" {{ request('payment_method') == 'upi' ? 'selected' : '' }}>UPI QR</option>
-                    <option value="online_razorpay" {{ request('payment_method') == 'online_razorpay' ? 'selected' : '' }}>Razorpay</option>
+                    <option value="online_razorpay" {{ request('payment_method') == 'online_razorpay' ? 'selected' : '' }}>Online Payment</option>
                     <option value="cash" {{ request('payment_method') == 'cash' ? 'selected' : '' }}>Cash</option>
                 </select>
                 <select name="status" class="form-control" style="max-width: 130px;">
@@ -236,7 +201,7 @@
                                 <option value="cash">Counter Cash</option>
                                 <option value="upi">Desk UPI QR</option>
                                 <option value="card">Card POS</option>
-                                <option value="online_razorpay">Razorpay Online</option>
+                                <option value="online_razorpay">Online Payment</option>
                             </select>
                         </div>
 
@@ -262,55 +227,6 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="closeModal('recordPaymentModal')">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save Payment</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Create Pricing Plan Modal -->
-    <div id="addPlanModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>New Study Pass Plan</h3>
-                <button type="button" class="modal-close" onclick="closeModal('addPlanModal')">&times;</button>
-            </div>
-            <form action="{{ route('admin.plans.store') }}" method="POST">
-                @csrf
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="planName">Plan Title</label>
-                        <input type="text" name="name" id="planName" class="form-control" placeholder="e.g. Weekend Pass" required>
-                    </div>
-
-                    <div class="grid grid-cols-2">
-                        <div class="form-group">
-                            <label for="planPrice">Price (₹)</label>
-                            <input type="number" step="0.01" name="price" id="planPrice" class="form-control" placeholder="250" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="planDuration">Duration (Days)</label>
-                            <input type="number" name="duration_days" id="planDuration" class="form-control" value="1" min="1" required>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="planShift">Permitted Shift</label>
-                        <select name="shift" id="planShift" class="form-control" required>
-                            <option value="morning">Morning Shift (8 AM - 2 PM)</option>
-                            <option value="evening">Evening Shift (2 PM - 8 PM)</option>
-                            <option value="full_day">Full Day (8 AM - 8 PM)</option>
-                            <option value="all">All Shifts / Flexible</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="planDesc">Description</label>
-                        <input type="text" name="description" id="planDesc" class="form-control" placeholder="Features or terms...">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('addPlanModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Plan</button>
                 </div>
             </form>
         </div>
