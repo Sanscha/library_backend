@@ -23,14 +23,14 @@ class ManagerPaymentController extends Controller
         $user = $request->user();
         $library = $user->library;
 
-        if (!$library) {
+        if (! $library) {
             return response()->json([
                 'success' => false,
                 'message' => 'No library linked to this manager account.',
             ], 404);
         }
 
-        $paymentRef = 'LIBREG-' . date('Ymd') . '-' . strtoupper(Str::random(5));
+        $paymentRef = 'LIBREG-'.date('Ymd').'-'.strtoupper(Str::random(5));
         $upiDetails = $this->paymentService->generateUpiQr(
             (float) $library->registration_fee,
             $paymentRef,
@@ -77,7 +77,7 @@ class ManagerPaymentController extends Controller
         $user = $request->user();
         $library = $user->library;
 
-        if (!$library) {
+        if (! $library) {
             return response()->json([
                 'success' => false,
                 'message' => 'No library linked to this manager account.',
@@ -99,7 +99,7 @@ class ManagerPaymentController extends Controller
             $orderId = $fields['razorpay_order_id'] ?? null;
             $sig = $fields['razorpay_signature'] ?? null;
 
-            if (!$paymentId || !$orderId) {
+            if (! $paymentId || ! $orderId) {
                 return response()->json([
                     'success' => false,
                     'message' => 'razorpay_payment_id and razorpay_order_id are required for online Razorpay verification.',
@@ -107,7 +107,7 @@ class ManagerPaymentController extends Controller
             }
 
             $isValid = $this->paymentService->verifyRazorpaySignature($orderId, $paymentId, (string) $sig);
-            if (!$isValid) {
+            if (! $isValid) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Razorpay payment signature verification failed.',
@@ -117,7 +117,7 @@ class ManagerPaymentController extends Controller
             $txnId = $paymentId;
         } else {
             // UPI QR payment (e.g. UTR reference number or auto-generated reference)
-            $txnId = !empty($fields['transaction_id'])
+            $txnId = ! empty($fields['transaction_id'])
                 ? $fields['transaction_id']
                 : Payment::generateTransactionId('UPI-REG');
         }

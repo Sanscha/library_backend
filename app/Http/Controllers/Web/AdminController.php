@@ -230,7 +230,7 @@ class AdminController extends Controller
             'transaction_id' => Payment::generateTransactionId('ADM-VERIFY'),
             'status' => 'completed',
             'collected_by' => Auth::id(),
-            'notes' => 'Manually verified and activated by Admin ' . Auth::user()->name,
+            'notes' => 'Manually verified and activated by Admin '.Auth::user()->name,
         ]);
 
         return back()->with('success', "Library '{$library->name}' registration fee verified and library activated.");

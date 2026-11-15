@@ -96,6 +96,30 @@ class Library extends Model
     }
 
     /**
+     * Get all facilities for this library.
+     */
+    public function facilities(): HasMany
+    {
+        return $this->hasMany(Facility::class);
+    }
+
+    /**
+     * Get all notices and rules for this library.
+     */
+    public function notices(): HasMany
+    {
+        return $this->hasMany(Notice::class);
+    }
+
+    /**
+     * Get all complaints for this library.
+     */
+    public function complaints(): HasMany
+    {
+        return $this->hasMany(Complaint::class);
+    }
+
+    /**
      * Helper to generate a unique slug.
      */
     public static function createUniqueSlug(string $name): string
@@ -122,7 +146,7 @@ class Library extends Model
         }
 
         // Haversine formula calculation for distance in kilometers
-        $haversine = "(6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude))))";
+        $haversine = '(6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude))))';
 
         return $query->selectRaw("libraries.*, {$haversine} AS distance_km", [$lat, $lng, $lat])
             ->whereNotNull('latitude')

@@ -13,10 +13,10 @@ return new class extends Migration
     {
         // 1. Add google_id and avatar to users table
         Schema::table('users', function (Blueprint $table) {
-            if (!Schema::hasColumn('users', 'google_id')) {
+            if (! Schema::hasColumn('users', 'google_id')) {
                 $table->string('google_id')->nullable()->unique()->after('email');
             }
-            if (!Schema::hasColumn('users', 'avatar')) {
+            if (! Schema::hasColumn('users', 'avatar')) {
                 $table->string('avatar')->nullable()->after('google_id');
             }
         });
@@ -58,17 +58,17 @@ return new class extends Migration
 
         // 4. Update seats table to associate with library and allow nullable zone_id
         Schema::table('seats', function (Blueprint $table) {
-            if (!Schema::hasColumn('seats', 'library_id')) {
+            if (! Schema::hasColumn('seats', 'library_id')) {
                 $table->foreignId('library_id')->nullable()->after('id')->constrained('libraries')->onDelete('cascade');
             }
         });
 
         // 5. Update payments table to associate with library and type
         Schema::table('payments', function (Blueprint $table) {
-            if (!Schema::hasColumn('payments', 'library_id')) {
+            if (! Schema::hasColumn('payments', 'library_id')) {
                 $table->foreignId('library_id')->nullable()->after('booking_id')->constrained('libraries')->onDelete('cascade');
             }
-            if (!Schema::hasColumn('payments', 'type')) {
+            if (! Schema::hasColumn('payments', 'type')) {
                 $table->string('type')->default('seat_booking')->after('amount'); // library_registration, seat_booking, membership_plan
             }
         });

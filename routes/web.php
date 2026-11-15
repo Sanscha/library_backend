@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Web\AdminController;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 // Redirect root to Admin Dashboard
@@ -49,21 +50,21 @@ Route::middleware('staff')->prefix('admin')->name('admin.')->group(function () {
 // Hosting migration helper (convenient for shared hosting like InfinityFree with no SSH access)
 Route::get('/system/migrate', function () {
     $secret = request('key');
-    if (!$secret || $secret !== config('app.key')) {
+    if (! $secret || $secret !== config('app.key')) {
         abort(403, 'Unauthorized. Please provide ?key= matching your APP_KEY.');
     }
 
     try {
-        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-        $output = \Illuminate\Support\Facades\Artisan::output();
+        Artisan::call('migrate', ['--force' => true]);
+        $output = Artisan::output();
 
         if (request()->has('seed')) {
-            \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
-            $output .= "\n" . \Illuminate\Support\Facades\Artisan::output();
+            Artisan::call('db:seed', ['--force' => true]);
+            $output .= "\n".Artisan::output();
         }
 
-        return response('<pre style="font-family:monospace; background:#0f172a; color:#38bdf8; padding:20px; border-radius:8px;">' . e($output) . '</pre>');
-    } catch (\Throwable $e) {
-        return response('<pre style="font-family:monospace; background:#450a0a; color:#f87171; padding:20px; border-radius:8px;">Migration Error: ' . e($e->getMessage()) . '</pre>', 500);
+        return response('<pre style="font-family:monospace; background:#0f172a; color:#38bdf8; padding:20px; border-radius:8px;">'.e($output).'</pre>');
+    } catch (Throwable $e) {
+        return response('<pre style="font-family:monospace; background:#450a0a; color:#f87171; padding:20px; border-radius:8px;">Migration Error: '.e($e->getMessage()).'</pre>', 500);
     }
 });

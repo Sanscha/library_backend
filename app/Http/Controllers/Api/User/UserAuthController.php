@@ -68,7 +68,7 @@ class UserAuthController extends Controller
 
         $isValid = $this->otpService->verifyOtp($fields['email'], $fields['otp'], 'user_register');
 
-        if (!$isValid) {
+        if (! $isValid) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid or expired OTP code. Please request a new one.',
@@ -122,14 +122,14 @@ class UserAuthController extends Controller
             ->orWhere('phone', $login)
             ->first();
 
-        if (!$user || !Hash::check($fields['password'], $user->password)) {
+        if (! $user || ! Hash::check($fields['password'], $user->password)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid credentials.',
             ], 401);
         }
 
-        if (!$user->isActive()) {
+        if (! $user->isActive()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Your account is suspended. Please contact library administration.',
@@ -137,7 +137,7 @@ class UserAuthController extends Controller
         }
 
         // Check if email has been verified via OTP
-        if (!$user->isEmailVerified()) {
+        if (! $user->isEmailVerified()) {
             $otpResult = $this->otpService->sendOtp($user->email, 'user_register');
 
             return response()->json([
@@ -179,7 +179,7 @@ class UserAuthController extends Controller
         if ($user) {
             // Update Google ID & avatar if not already linked
             $user->google_id = $fields['google_id'];
-            if (!empty($fields['avatar'])) {
+            if (! empty($fields['avatar'])) {
                 $user->avatar = $fields['avatar'];
             }
             if ($user->email_verified_at === null) {

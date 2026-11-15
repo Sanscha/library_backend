@@ -89,7 +89,7 @@ class Payment extends Model
      */
     public static function generateTransactionId(string $prefix = 'PAY'): string
     {
-        return $prefix . '-' . date('YmdHis') . '-' . strtoupper(Str::random(4));
+        return $prefix.'-'.date('YmdHis').'-'.strtoupper(Str::random(4));
     }
 
     /**

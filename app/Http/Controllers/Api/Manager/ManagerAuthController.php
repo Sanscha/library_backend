@@ -61,7 +61,7 @@ class ManagerAuthController extends Controller
         $imagePath = null;
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('libraries', 'public');
-        } elseif (!empty($fields['image']) && is_string($fields['image'])) {
+        } elseif (! empty($fields['image']) && is_string($fields['image'])) {
             $imagePath = $fields['image'];
         }
 
@@ -102,7 +102,7 @@ class ManagerAuthController extends Controller
         $otpResult = $this->otpService->sendOtp($user->email, 'manager_register');
 
         // 5. Generate Payment Details for onboarding (UPI QR & Razorpay Order)
-        $paymentRef = 'LIBREG-' . date('Ymd') . '-' . strtoupper(Str::random(5));
+        $paymentRef = 'LIBREG-'.date('Ymd').'-'.strtoupper(Str::random(5));
         $upiDetails = $this->paymentService->generateUpiQr(
             $regFee,
             $paymentRef,
@@ -148,7 +148,7 @@ class ManagerAuthController extends Controller
 
         $isValid = $this->otpService->verifyOtp($fields['email'], $fields['otp'], 'manager_register');
 
-        if (!$isValid) {
+        if (! $isValid) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid or expired OTP code.',
@@ -187,21 +187,21 @@ class ManagerAuthController extends Controller
             })
             ->first();
 
-        if (!$user || !Hash::check($fields['password'], $user->password)) {
+        if (! $user || ! Hash::check($fields['password'], $user->password)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid credentials.',
             ], 401);
         }
 
-        if (!$user->isManager()) {
+        if (! $user->isManager()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Access denied. Account is not registered as a Library Manager.',
             ], 403);
         }
 
-        if (!$user->isEmailVerified()) {
+        if (! $user->isEmailVerified()) {
             $otpResult = $this->otpService->sendOtp($user->email, 'manager_register');
 
             return response()->json([

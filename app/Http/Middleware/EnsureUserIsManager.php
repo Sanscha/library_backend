@@ -17,7 +17,7 @@ class EnsureUserIsManager
     {
         $user = $request->user();
 
-        if (!$user || (!$user->isManager() && !$user->isAdmin())) {
+        if (! $user || (! $user->isManager() && ! $user->isAdmin())) {
             return response()->json([
                 'success' => false,
                 'message' => 'Forbidden: Library Manager privileges required.',

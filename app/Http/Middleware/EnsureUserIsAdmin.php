@@ -17,7 +17,7 @@ class EnsureUserIsAdmin
     {
         $user = $request->user();
 
-        if (!$user || !$user->isAdmin()) {
+        if (! $user || ! $user->isAdmin()) {
             if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json([
                     'success' => false,

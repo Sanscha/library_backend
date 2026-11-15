@@ -3,10 +3,15 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Attendance;
+use App\Models\Booking;
+use App\Models\Complaint;
 use App\Models\Library;
 use App\Models\Payment;
 use App\Models\Seat;
+use App\Models\Subscription;
 use App\Models\User;
+use App\Models\WaitingList;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -102,7 +107,7 @@ class AdminApiController extends Controller
     {
         $libraryId = $request->input('library_id');
 
-        $seatQuery = Seat::with(['library:id,name', 'zone:id,name']);
+        $seatQuery = Seat::with(['library:id,name', 'zone:id,name', 'activeBooking.user:id,name,email,phone']);
 
         if ($libraryId) {
             $seatQuery->where('library_id', $libraryId);
@@ -127,14 +132,52 @@ class AdminApiController extends Controller
             'maintenance' => (clone $allSeats)->where('status', 'maintenance')->count(),
         ];
 
+        $items = collect($seats->items())->map(function ($seat) {
+            $data = $seat->toArray();
+            $data['expiry_date'] = $seat->activeBooking ? ($seat->activeBooking->expires_at ?? $seat->activeBooking->booking_date) : null;
+            $data['booked_by'] = $seat->activeBooking?->user?->name;
+
+            return $data;
+        });
+
         return response()->json([
             'success' => true,
             'summary' => $summary,
-            'data' => $seats->items(),
+            'data' => $items,
             'pagination' => [
                 'current_page' => $seats->currentPage(),
                 'last_page' => $seats->lastPage(),
+                'total' => $seats->total(),
             ],
+        ], 200);
+    }
+
+    /**
+     * Comprehensive Admin Dashboard Key Metrics.
+     */
+    public function getDashboardMetrics(): JsonResponse
+    {
+        $today = date('Y-m-d');
+
+        $metrics = [
+            'total_members' => User::whereIn('role', ['user', 'member'])->count(),
+            'total_seats' => Seat::count(),
+            'available_seats' => Seat::where('status', 'available')->count(),
+            'occupied_seats' => Seat::where('status', 'occupied')->count(),
+            'reserved_seats' => Seat::where('status', 'reserved')->count(),
+            'maintenance_seats' => Seat::where('status', 'maintenance')->count(),
+            'today_bookings' => Booking::where('booking_date', $today)->where('status', 'active')->count(),
+            'active_subscriptions' => Subscription::where('status', 'active')->where('end_date', '>=', $today)->count(),
+            'pending_complaints' => Complaint::where('status', 'pending')->count(),
+            'waiting_list_count' => WaitingList::where('status', 'waiting')->count(),
+            'today_checkins' => Attendance::where('date', $today)->count(),
+            'today_revenue' => (float) Payment::whereDate('created_at', $today)->where('status', 'completed')->sum('amount'),
+            'total_revenue' => (float) Payment::where('status', 'completed')->sum('amount'),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'metrics' => $metrics,
         ], 200);
     }
 

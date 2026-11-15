@@ -23,7 +23,7 @@ class OtpService
                 $message->to($email)->subject('Your Verification Code - Library SeatSync');
             });
         } catch (\Throwable $e) {
-            Log::warning("Could not send email via SMTP, logged OTP instead: {$otp->otp} for {$email}. Error: " . $e->getMessage());
+            Log::warning("Could not send email via SMTP, logged OTP instead: {$otp->otp} for {$email}. Error: ".$e->getMessage());
         }
 
         // Always log OTP for development visibility

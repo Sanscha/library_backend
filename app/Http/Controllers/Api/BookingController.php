@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Seat;
+use App\Services\SeatAlertService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -127,6 +128,11 @@ class BookingController extends Controller
             if ($seat && $seat->status !== 'maintenance') {
                 $seat->status = 'available';
                 $seat->save();
+
+                // Trigger Smart Vacancy Alert (5-minute window) & Notify Waiting List
+                $seatAlertService = app(SeatAlertService::class);
+                $seatAlertService->triggerSmartVacancyAlert($seat, $booking->shift, $booking->booking_date);
+                $seatAlertService->notifyWaitingList($seat, $booking->shift, $booking->booking_date);
             }
         }
 

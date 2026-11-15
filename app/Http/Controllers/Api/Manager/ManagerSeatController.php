@@ -17,7 +17,7 @@ class ManagerSeatController extends Controller
         $user = $request->user();
         $library = $user->library;
 
-        if (!$library) {
+        if (! $library) {
             return response()->json([
                 'success' => false,
                 'message' => 'No library linked to this manager account.',
@@ -58,7 +58,7 @@ class ManagerSeatController extends Controller
         $user = $request->user();
         $library = $user->library;
 
-        if (!$library) {
+        if (! $library) {
             return response()->json([
                 'success' => false,
                 'message' => 'No library linked to this manager account.',
@@ -66,7 +66,7 @@ class ManagerSeatController extends Controller
         }
 
         $totalSeats = (int) $fields['total_seats'];
-        $prefix = !empty($fields['prefix']) ? trim($fields['prefix']) : 'S-';
+        $prefix = ! empty($fields['prefix']) ? trim($fields['prefix']) : 'S-';
         $replaceExisting = (bool) ($fields['replace_existing'] ?? false);
 
         if ($replaceExisting) {
@@ -79,11 +79,11 @@ class ManagerSeatController extends Controller
 
         $createdSeats = [];
         for ($i = $start; $i <= $end; $i++) {
-            $seatNumber = $prefix . str_pad((string) $i, 2, '0', STR_PAD_LEFT);
+            $seatNumber = $prefix.str_pad((string) $i, 2, '0', STR_PAD_LEFT);
 
             // Avoid duplicate seat numbers
             $exists = $library->seats()->where('seat_number', $seatNumber)->exists();
-            if (!$exists) {
+            if (! $exists) {
                 $seat = Seat::create([
                     'library_id' => $library->id,
                     'seat_number' => $seatNumber,
@@ -99,7 +99,7 @@ class ManagerSeatController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Configured ' . count($createdSeats) . " seats for {$library->name}.",
+            'message' => 'Configured '.count($createdSeats)." seats for {$library->name}.",
             'total_seats' => $library->total_seats,
             'created_count' => count($createdSeats),
             'seats' => $library->seats()->orderBy('seat_number')->get(),
@@ -114,7 +114,7 @@ class ManagerSeatController extends Controller
         $user = $request->user();
         $library = $user->library;
 
-        if (!$library) {
+        if (! $library) {
             return response()->json([
                 'success' => false,
                 'message' => 'No library linked to this manager account.',
@@ -150,7 +150,7 @@ class ManagerSeatController extends Controller
         $user = $request->user();
         $library = $user->library;
 
-        if (!$library) {
+        if (! $library) {
             return response()->json([
                 'success' => false,
                 'message' => 'No library linked to this manager account.',
@@ -193,7 +193,7 @@ class ManagerSeatController extends Controller
         $user = $request->user();
         $library = $user->library;
 
-        if (!$library) {
+        if (! $library) {
             return response()->json([
                 'success' => false,
                 'message' => 'No library linked to this manager account.',
@@ -219,7 +219,7 @@ class ManagerSeatController extends Controller
         $user = $request->user();
         $library = $user->library;
 
-        if (!$library) {
+        if (! $library) {
             return response()->json([
                 'success' => false,
                 'message' => 'No library linked to this manager account.',

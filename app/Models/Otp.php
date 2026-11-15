@@ -71,7 +71,7 @@ class Otp extends Model
             ->latest()
             ->first();
 
-        if (!$record) {
+        if (! $record) {
             return false;
         }
 

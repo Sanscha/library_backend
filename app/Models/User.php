@@ -88,6 +88,57 @@ class User extends Authenticatable
     }
 
     /**
+     * Get subscriptions for this user.
+     */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    /**
+     * Get active subscription for this user.
+     */
+    public function activeSubscription(): HasOne
+    {
+        return $this->hasOne(Subscription::class)
+            ->where('status', 'active')
+            ->where('end_date', '>=', date('Y-m-d'))
+            ->latest('end_date');
+    }
+
+    /**
+     * Get attendances / study sessions for this user.
+     */
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    /**
+     * Get complaints submitted by this user.
+     */
+    public function complaints(): HasMany
+    {
+        return $this->hasMany(Complaint::class);
+    }
+
+    /**
+     * Get waiting list entries for this user.
+     */
+    public function waitingLists(): HasMany
+    {
+        return $this->hasMany(WaitingList::class);
+    }
+
+    /**
+     * Get in-app notifications for this user.
+     */
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class)->latest();
+    }
+
+    /**
      * Check if user is staff or admin.
      */
     public function isStaff(): bool

@@ -20,7 +20,7 @@ class PaymentService
         $encodedNote = urlencode($note);
 
         $upiString = "upi://pay?pa={$payeeUpi}&pn={$encodedPayee}&am={$amount}&cu=INR&tr={$refId}&tn={$encodedNote}";
-        $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($upiString);
+        $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data='.urlencode($upiString);
 
         return [
             'upi_string' => $upiString,
@@ -46,7 +46,7 @@ class PaymentService
 
         // If real Razorpay SDK is configured, it would call Razorpay Client API here.
         // We generate a compliant order_id format for Flutter and web checkout integration:
-        $orderId = 'order_' . Str::random(14);
+        $orderId = 'order_'.Str::random(14);
 
         return [
             'order_id' => $orderId,
@@ -66,7 +66,7 @@ class PaymentService
         $keySecret = config('services.razorpay.secret', 'mock_secret_key');
 
         // Check HMAC SHA256 signature
-        $expectedSignature = hash_hmac('sha256', $orderId . '|' . $paymentId, $keySecret);
+        $expectedSignature = hash_hmac('sha256', $orderId.'|'.$paymentId, $keySecret);
 
         if (hash_equals($expectedSignature, $signature)) {
             return true;

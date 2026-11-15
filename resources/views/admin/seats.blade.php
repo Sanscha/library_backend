@@ -1,4 +1,4 @@
-﻿@extends('layouts.admin')
+@extends('layouts.admin')
 
 @section('title', 'Seats & Zones')
 
@@ -57,8 +57,16 @@
                         </div>
 
                         @if($seat->activeBooking && $seat->activeBooking->user)
-                            <div style="font-size:11px; color:#4338ca; margin-bottom:10px; background:#eef2ff; border:1px solid #e0e7ff; padding:3px 6px; border-radius:4px;">
-                                Booked: <strong>{{ $seat->activeBooking->user->name }}</strong>
+                            <div style="font-size:11px; color:#4338ca; margin-bottom:8px; background:#eef2ff; border:1px solid #e0e7ff; padding:4px 8px; border-radius:4px; line-height:1.4;">
+                                <div>Booked: <strong>{{ $seat->activeBooking->user->name }}</strong></div>
+                                <div style="color:#64748b;">Shift: {{ ucfirst(str_replace('_', ' ', $seat->activeBooking->shift)) }}</div>
+                                <div style="color:#b91c1c; font-weight:600;">
+                                    Expiry: {{ $seat->activeBooking->expires_at ? \Carbon\Carbon::parse($seat->activeBooking->expires_at)->format('d M, h:i A') : \Carbon\Carbon::parse($seat->activeBooking->booking_date)->format('d M Y') }}
+                                </div>
+                            </div>
+                        @else
+                            <div style="font-size:11px; color:#15803d; margin-bottom:8px; background:#f0fdf4; border:1px solid #dcfce7; padding:3px 6px; border-radius:4px;">
+                                &#10003; Available for Booking
                             </div>
                         @endif
 
