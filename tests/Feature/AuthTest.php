@@ -2,8 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Mail\OtpVerificationMail;
 use App\Models\User;
+use App\Services\OtpService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class AuthTest extends TestCase
@@ -140,5 +143,21 @@ class AuthTest extends TestCase
                 'success' => true,
                 'message' => 'Logged out successfully',
             ]);
+    }
+
+    public function test_otp_service_sends_verification_mail(): void
+    {
+        Mail::fake();
+
+        $otpService = app(OtpService::class);
+        $result = $otpService->sendOtp('teststudent@example.com', 'registration');
+
+        $this->assertTrue($result['success']);
+        $this->assertEquals('teststudent@example.com', $result['email']);
+
+        Mail::assertSent(OtpVerificationMail::class, function ($mail) {
+            return $mail->hasTo('teststudent@example.com')
+                && strlen($mail->otp) === 6;
+        });
     }
 }

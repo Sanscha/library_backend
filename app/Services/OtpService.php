@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Mail\OtpVerificationMail;
 use App\Models\Otp;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -17,11 +18,9 @@ class OtpService
     {
         $otp = Otp::generate($email, $type);
 
-        // Attempt to send email; if mail server isn't configured, log it safely so development/tests never fail
+        // Attempt to send email via configured SMTP; if mail server isn't configured, log safely so registration never crashes
         try {
-            Mail::raw("Your SeatSync Library Verification Code is: {$otp->otp}. This code expires in 15 minutes.", function ($message) use ($email) {
-                $message->to($email)->subject('Your Verification Code - Library SeatSync');
-            });
+            Mail::to($email)->send(new OtpVerificationMail($otp->otp, 15));
         } catch (\Throwable $e) {
             Log::warning("Could not send email via SMTP, logged OTP instead: {$otp->otp} for {$email}. Error: ".$e->getMessage());
         }
