@@ -16,6 +16,46 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `attendances`
+--
+
+DROP TABLE IF EXISTS `attendances`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `attendances` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint(20) unsigned NOT NULL,
+  `library_id` bigint(20) unsigned DEFAULT NULL,
+  `booking_id` bigint(20) unsigned DEFAULT NULL,
+  `check_in_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `check_out_at` timestamp NULL DEFAULT NULL,
+  `duration_minutes` int(11) NOT NULL DEFAULT 0,
+  `date` date NOT NULL,
+  `status` enum('checked_in','checked_out') NOT NULL DEFAULT 'checked_in',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `attendances_user_id_foreign` (`user_id`),
+  KEY `attendances_library_id_foreign` (`library_id`),
+  KEY `attendances_booking_id_foreign` (`booking_id`),
+  KEY `attendances_date_index` (`date`),
+  CONSTRAINT `attendances_booking_id_foreign` FOREIGN KEY (`booking_id`) REFERENCES `bookings` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `attendances_library_id_foreign` FOREIGN KEY (`library_id`) REFERENCES `libraries` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `attendances_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `attendances`
+--
+
+LOCK TABLES `attendances` WRITE;
+/*!40000 ALTER TABLE `attendances` DISABLE KEYS */;
+INSERT INTO `attendances` VALUES (1,3,1,1,'2026-11-14 05:44:38','2026-11-14 08:44:38',180,'2026-11-14','checked_out','2026-11-14 09:44:38','2026-11-14 09:44:38'),(2,3,1,1,'2026-11-14 08:59:38',NULL,0,'2026-11-14','checked_in','2026-11-14 09:44:38','2026-11-14 09:44:38');
+/*!40000 ALTER TABLE `attendances` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `bookings`
 --
 
@@ -29,6 +69,7 @@ CREATE TABLE `bookings` (
   `pass_code` varchar(255) NOT NULL,
   `shift` enum('morning','evening','full_day') NOT NULL,
   `booking_date` date NOT NULL,
+  `expires_at` timestamp NULL DEFAULT NULL,
   `status` enum('active','completed','cancelled') NOT NULL DEFAULT 'active',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
@@ -47,7 +88,7 @@ CREATE TABLE `bookings` (
 
 LOCK TABLES `bookings` WRITE;
 /*!40000 ALTER TABLE `bookings` DISABLE KEYS */;
-INSERT INTO `bookings` VALUES (1,3,3,'LIB-PASS-001','morning','2026-11-01','active','2026-11-01 03:12:38','2026-11-01 03:12:38'),(2,4,4,'LIB-PASS-002','full_day','2026-11-01','active','2026-11-01 03:12:38','2026-11-01 03:12:38');
+INSERT INTO `bookings` VALUES (1,3,3,'LIB-PASS-001','morning','2026-11-14',NULL,'active','2026-11-14 09:44:37','2026-11-14 09:44:37'),(2,4,4,'LIB-PASS-002','full_day','2026-11-14',NULL,'active','2026-11-14 09:44:37','2026-11-14 09:44:37');
 /*!40000 ALTER TABLE `bookings` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -99,6 +140,79 @@ CREATE TABLE `cache_locks` (
 LOCK TABLES `cache_locks` WRITE;
 /*!40000 ALTER TABLE `cache_locks` DISABLE KEYS */;
 /*!40000 ALTER TABLE `cache_locks` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `complaints`
+--
+
+DROP TABLE IF EXISTS `complaints`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `complaints` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint(20) unsigned NOT NULL,
+  `library_id` bigint(20) unsigned DEFAULT NULL,
+  `seat_id` bigint(20) unsigned DEFAULT NULL,
+  `category` enum('cleanliness','noise','ac_cooler','wifi','charging_point','water','washroom','seat_issue','other') NOT NULL DEFAULT 'other',
+  `subject` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  `status` enum('pending','in_progress','resolved','closed') NOT NULL DEFAULT 'pending',
+  `admin_remark` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `complaints_user_id_foreign` (`user_id`),
+  KEY `complaints_library_id_foreign` (`library_id`),
+  KEY `complaints_seat_id_foreign` (`seat_id`),
+  CONSTRAINT `complaints_library_id_foreign` FOREIGN KEY (`library_id`) REFERENCES `libraries` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `complaints_seat_id_foreign` FOREIGN KEY (`seat_id`) REFERENCES `seats` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `complaints_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `complaints`
+--
+
+LOCK TABLES `complaints` WRITE;
+/*!40000 ALTER TABLE `complaints` DISABLE KEYS */;
+INSERT INTO `complaints` VALUES (1,3,1,3,'ac_cooler','AC Temperature too low near desk G-03','The AC vent right above seat G-03 is blowing directly. Kindly adjust temperature to 24°C.','resolved','AC vent deflector adjusted and temperature set to 23°C.','2026-11-14 09:44:38','2026-11-14 09:44:38'),(2,4,1,4,'wifi','Intermittent Wi-Fi on 2nd Floor','Speed dropped below 10 Mbps around 3 PM today.','in_progress','Network engineer is resetting the second floor access point.','2026-11-14 09:44:38','2026-11-14 09:44:38');
+/*!40000 ALTER TABLE `complaints` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `facilities`
+--
+
+DROP TABLE IF EXISTS `facilities`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `facilities` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `library_id` bigint(20) unsigned DEFAULT NULL,
+  `name` varchar(255) NOT NULL,
+  `category` enum('wifi','charging','locker','ac_cooler','water','washroom_gents','washroom_ladies','other') NOT NULL,
+  `status` enum('available','limited','unavailable','maintenance') NOT NULL DEFAULT 'available',
+  `details` varchar(255) DEFAULT NULL,
+  `icon` varchar(255) DEFAULT NULL,
+  `last_checked_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `facilities_library_id_foreign` (`library_id`),
+  CONSTRAINT `facilities_library_id_foreign` FOREIGN KEY (`library_id`) REFERENCES `libraries` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `facilities`
+--
+
+LOCK TABLES `facilities` WRITE;
+/*!40000 ALTER TABLE `facilities` DISABLE KEYS */;
+INSERT INTO `facilities` VALUES (1,1,'High-Speed Wi-Fi','wifi','available','150 Mbps Fiber (Dual Band 5GHz & 2.4GHz)','wifi','2026-11-14 09:44:37','2026-11-14 09:44:37','2026-11-14 09:44:37'),(2,1,'Charging Points','charging','available','Universal socket available at all individual study desks','zap','2026-11-14 09:44:37','2026-11-14 09:44:37','2026-11-14 09:44:37'),(3,1,'Personal Lockers','locker','available','18 of 24 Lockers Available for allotment','lock','2026-11-14 09:44:38','2026-11-14 09:44:38','2026-11-14 09:44:38'),(4,1,'AC & Air Cooling','ac_cooler','available','Central Air Conditioners active (22°C maintained)','wind','2026-11-14 09:44:38','2026-11-14 09:44:38','2026-11-14 09:44:38'),(5,1,'Drinking Water / Aqua','water','available','Aquaguard RO filtered cold and regular drinking water','droplet','2026-11-14 09:44:38','2026-11-14 09:44:38','2026-11-14 09:44:38'),(6,1,'Washroom (Gents)','washroom_gents','available','Hygienic and sanitized regularly (Last checked 25m ago)','user','2026-11-14 09:44:38','2026-11-14 09:44:38','2026-11-14 09:44:38'),(7,1,'Washroom (Ladies)','washroom_ladies','available','Clean, sanitized, and well-maintained','user-check','2026-11-14 09:44:38','2026-11-14 09:44:38','2026-11-14 09:44:38');
+/*!40000 ALTER TABLE `facilities` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -233,7 +347,7 @@ CREATE TABLE `libraries` (
 
 LOCK TABLES `libraries` WRITE;
 /*!40000 ALTER TABLE `libraries` DISABLE KEYS */;
-INSERT INTO `libraries` VALUES (1,6,'Apex Central Study Hub','apex-central-study-hub',NULL,'402 Prestige Point, Shukrawar Peth','Pune','Maharashtra','411002',NULL,NULL,'9822001122','contact@apexcentral.in','Premium air-conditioned study hall with high-speed WiFi and individual ergonomic seating.','[\"High Speed WiFi\",\"Air Conditioned\",\"Power Outlets\",\"RO Water Dispenser\",\"CCTV Security\"]',60,499.00,'paid','active','2026-11-01 03:12:39','2026-11-01 03:12:39'),(2,7,'Study Haven Reading Room','study-haven-reading-room',NULL,'12 Near Modern College, Shivajinagar','Pune','Maharashtra','411005',NULL,NULL,'9822003344','info@studyhaven.in','Dedicated silent reading room designed for UPSC and competitive exam aspirants.','[\"Silent Zones\",\"Newspaper Desk\",\"Lockers\",\"Power Sockets\"]',40,499.00,'unpaid','pending_payment','2026-11-01 03:12:39','2026-11-01 03:12:39');
+INSERT INTO `libraries` VALUES (1,6,'Apex Central Study Hub','apex-central-study-hub',NULL,'402 Prestige Point, Shukrawar Peth','Pune','Maharashtra','411002',NULL,NULL,'9822001122','contact@apexcentral.in','Premium air-conditioned study hall with high-speed WiFi and individual ergonomic seating.','[\"High Speed WiFi\",\"Air Conditioned\",\"Power Outlets\",\"RO Water Dispenser\",\"CCTV Security\"]',60,499.00,'paid','active','2026-11-14 09:44:37','2026-11-14 09:44:37'),(2,7,'Study Haven Reading Room','study-haven-reading-room',NULL,'12 Near Modern College, Shivajinagar','Pune','Maharashtra','411005',NULL,NULL,'9822003344','info@studyhaven.in','Dedicated silent reading room designed for UPSC and competitive exam aspirants.','[\"Silent Zones\",\"Newspaper Desk\",\"Lockers\",\"Power Sockets\"]',40,499.00,'unpaid','pending_payment','2026-11-14 09:44:37','2026-11-14 09:44:37');
 /*!40000 ALTER TABLE `libraries` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -249,7 +363,7 @@ CREATE TABLE `migrations` (
   `migration` varchar(255) NOT NULL,
   `batch` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -258,8 +372,75 @@ CREATE TABLE `migrations` (
 
 LOCK TABLES `migrations` WRITE;
 /*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
-INSERT INTO `migrations` VALUES (1,'0001_01_01_000000_create_users_table',1),(2,'0001_01_01_000001_create_cache_table',1),(3,'0001_01_01_000002_create_jobs_table',1),(4,'2026_10_29_000001_create_library_seats_tables',1),(5,'2026_10_29_000002_create_plans_and_payments_tables',1),(6,'2026_10_29_160444_create_personal_access_tokens_table',1),(7,'2026_10_31_000001_create_libraries_and_otps_tables',1);
+INSERT INTO `migrations` VALUES (1,'0001_01_01_000000_create_users_table',1),(2,'0001_01_01_000001_create_cache_table',1),(3,'0001_01_01_000002_create_jobs_table',1),(4,'2026_10_29_000001_create_library_seats_tables',1),(5,'2026_10_29_000002_create_plans_and_payments_tables',1),(6,'2026_10_29_160444_create_personal_access_tokens_table',1),(7,'2026_10_31_000001_create_libraries_and_otps_tables',1),(8,'2026_11_14_150844_create_library_advanced_features_tables',1);
 /*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `notices`
+--
+
+DROP TABLE IF EXISTS `notices`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `notices` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `library_id` bigint(20) unsigned DEFAULT NULL,
+  `title` varchar(255) NOT NULL,
+  `content` text NOT NULL,
+  `type` enum('rule','notice','announcement','timing') NOT NULL DEFAULT 'notice',
+  `priority` enum('normal','important','urgent') NOT NULL DEFAULT 'normal',
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `notices_library_id_foreign` (`library_id`),
+  CONSTRAINT `notices_library_id_foreign` FOREIGN KEY (`library_id`) REFERENCES `libraries` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `notices`
+--
+
+LOCK TABLES `notices` WRITE;
+/*!40000 ALTER TABLE `notices` DISABLE KEYS */;
+INSERT INTO `notices` VALUES (1,1,'Strict Silence in Study Halls','Pin-drop silence must be maintained in the study hall at all times. Whispering and discussions are prohibited.','rule','important',1,'2026-11-14 09:44:38','2026-11-14 09:44:38'),(2,1,'Mobile Phones Must Be on Silent','All phone calls must be attended outside the study area in the designated balcony zone.','rule','important',1,'2026-11-14 09:44:38','2026-11-14 09:44:38'),(3,1,'Clean Desk & Waste Disposal','Please clear all papers and bottles into dustbins before leaving your desk.','rule','normal',1,'2026-11-14 09:44:38','2026-11-14 09:44:38'),(4,1,'No Food / Beverages in Study Hall','Snacks and lunch are only allowed in the student cafeteria / breakout lounge.','rule','normal',1,'2026-11-14 09:44:38','2026-11-14 09:44:38'),(5,1,'Operating Hours Notice','Morning Slot: 8:00 AM - 2:00 PM | Evening Slot: 2:00 PM - 8:00 PM | Full Day: 8:00 AM - 10:00 PM.','timing','important',1,'2026-11-14 09:44:38','2026-11-14 09:44:38'),(6,1,'Campus High-Speed Wi-Fi Upgraded','We upgraded to 150 Mbps fiber broadband. Log in with your registered phone number.','notice','normal',1,'2026-11-14 09:44:38','2026-11-14 09:44:38');
+/*!40000 ALTER TABLE `notices` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `notifications`
+--
+
+DROP TABLE IF EXISTS `notifications`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `notifications` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint(20) unsigned NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `type` enum('fee_reminder','pending_payment','vacant_seat','smart_vacancy_alert','notice','general') NOT NULL DEFAULT 'general',
+  `badge` varchar(255) DEFAULT NULL,
+  `data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`data`)),
+  `is_read` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `notifications_user_id_foreign` (`user_id`),
+  CONSTRAINT `notifications_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `notifications`
+--
+
+LOCK TABLES `notifications` WRITE;
+/*!40000 ALTER TABLE `notifications` DISABLE KEYS */;
+INSERT INTO `notifications` VALUES (1,4,'Fee Reminder: 3 Days Left','Reminder: Only 3 days left before your 3 Months Prime Pass subscription expires. Renew to retain your desk.','fee_reminder','Reminder','{\"days_remaining\":3,\"plan_name\":\"3 Months Prime Pass\"}',0,'2026-11-14 09:44:38','2026-11-14 09:44:38'),(2,3,'Library Seat Available!','Seat G-01 is now available! Book within 5 minutes.','smart_vacancy_alert','New','{\"seat_number\":\"G-01\",\"booking_window_minutes\":5}',0,'2026-11-14 09:44:38','2026-11-14 09:44:38');
+/*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -360,7 +541,7 @@ CREATE TABLE `payments` (
 
 LOCK TABLES `payments` WRITE;
 /*!40000 ALTER TABLE `payments` DISABLE KEYS */;
-INSERT INTO `payments` VALUES (1,3,1,NULL,1,1,80.00,'seat_booking','INR','cash','TXN-CASH-1001','completed','Counter cash payment paid to reception.','2026-11-01 03:12:38','2026-11-01 03:12:38'),(2,4,NULL,NULL,3,1,150.00,'seat_booking','INR','upi','UPI-9822334455@okaxis-01','completed','Direct QR scan UPI payment.','2026-11-01 03:12:38','2026-11-01 03:12:38'),(3,5,NULL,NULL,4,NULL,2200.00,'seat_booking','INR','online_razorpay','pay_rzp_f59bf7857804a2','completed','Online payment via Razorpay checkout.','2026-11-01 03:12:38','2026-11-01 03:12:38');
+INSERT INTO `payments` VALUES (1,3,1,NULL,1,1,80.00,'seat_booking','INR','cash','TXN-CASH-1001','completed','Counter cash payment paid to reception.','2026-11-14 09:44:37','2026-11-14 09:44:37'),(2,4,NULL,NULL,3,1,150.00,'seat_booking','INR','upi','UPI-9822334455@okaxis-01','completed','Direct QR scan UPI payment.','2026-11-14 09:44:37','2026-11-14 09:44:37'),(3,5,NULL,NULL,4,NULL,2200.00,'seat_booking','INR','online_razorpay','pay_rzp_f59bf7857804a2','completed','Online payment via Razorpay checkout.','2026-11-14 09:44:37','2026-11-14 09:44:37');
 /*!40000 ALTER TABLE `payments` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -416,7 +597,7 @@ CREATE TABLE `plans` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -425,7 +606,7 @@ CREATE TABLE `plans` (
 
 LOCK TABLES `plans` WRITE;
 /*!40000 ALTER TABLE `plans` DISABLE KEYS */;
-INSERT INTO `plans` VALUES (1,'Morning Shift Pass (8 AM - 2 PM)',80.00,1,'morning','Single day entry for the silent study morning slot.',1,'2026-11-01 03:12:38','2026-11-01 03:12:38'),(2,'Evening Shift Pass (2 PM - 8 PM)',80.00,1,'evening','Single day entry for the evening slot.',1,'2026-11-01 03:12:38','2026-11-01 03:12:38'),(3,'Full Day Study Pass (8 AM - 8 PM)',150.00,1,'full_day','Full access with high speed WiFi and power socket.',1,'2026-11-01 03:12:38','2026-11-01 03:12:38'),(4,'Monthly AC Study Pass (30 Days)',2200.00,30,'all','Guaranteed AC hall seat reservation for 30 consecutive days.',1,'2026-11-01 03:12:38','2026-11-01 03:12:38');
+INSERT INTO `plans` VALUES (1,'Morning Shift Pass (8 AM - 2 PM)',80.00,1,'morning','Single day entry for the silent study morning slot.',1,'2026-11-14 09:44:37','2026-11-14 09:44:37'),(2,'Evening Shift Pass (2 PM - 8 PM)',80.00,1,'evening','Single day entry for the evening slot.',1,'2026-11-14 09:44:37','2026-11-14 09:44:37'),(3,'Full Day Study Pass (8 AM - 8 PM)',150.00,1,'full_day','Full access with high speed WiFi and power socket.',1,'2026-11-14 09:44:37','2026-11-14 09:44:37'),(4,'1 Month Regular Pass (30 Days)',2000.00,30,'all','Dedicated seat access with AC, high-speed Wi-Fi, and locker for 1 Month.',1,'2026-11-14 09:44:37','2026-11-14 09:44:37'),(5,'3 Months Prime Pass (90 Days)',5400.00,90,'all','Popular quarterly pack with free locker allocation and priority seat selection.',1,'2026-11-14 09:44:37','2026-11-14 09:44:37'),(6,'6 Months Executive Pass (180 Days)',9900.00,180,'all','Half-yearly pass tailored for competitive exam preparation with complimentary locker.',1,'2026-11-14 09:44:37','2026-11-14 09:44:37'),(7,'1 Year VIP Annual Pass (365 Days)',18000.00,365,'all','Ultimate 1-Year unlimited access pass with permanent seat reservation.',1,'2026-11-14 09:44:37','2026-11-14 09:44:37');
 /*!40000 ALTER TABLE `plans` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -458,7 +639,7 @@ CREATE TABLE `seats` (
 
 LOCK TABLES `seats` WRITE;
 /*!40000 ALTER TABLE `seats` DISABLE KEYS */;
-INSERT INTO `seats` VALUES (1,NULL,1,'G-01','available','2026-11-01 03:12:38','2026-11-01 03:12:38'),(2,NULL,1,'G-02','available','2026-11-01 03:12:38','2026-11-01 03:12:38'),(3,NULL,1,'G-03','reserved','2026-11-01 03:12:38','2026-11-01 03:12:38'),(4,NULL,1,'G-04','occupied','2026-11-01 03:12:38','2026-11-01 03:12:38'),(5,NULL,1,'G-05','available','2026-11-01 03:12:38','2026-11-01 03:12:38'),(6,NULL,1,'G-06','available','2026-11-01 03:12:38','2026-11-01 03:12:38'),(7,NULL,1,'G-07','available','2026-11-01 03:12:38','2026-11-01 03:12:38'),(8,NULL,1,'G-08','occupied','2026-11-01 03:12:38','2026-11-01 03:12:38'),(9,NULL,1,'G-09','available','2026-11-01 03:12:38','2026-11-01 03:12:38'),(10,NULL,1,'G-10','available','2026-11-01 03:12:38','2026-11-01 03:12:38'),(11,NULL,2,'F-01','available','2026-11-01 03:12:38','2026-11-01 03:12:38'),(12,NULL,2,'F-02','available','2026-11-01 03:12:38','2026-11-01 03:12:38'),(13,NULL,2,'F-03','available','2026-11-01 03:12:38','2026-11-01 03:12:38'),(14,NULL,2,'F-04','occupied','2026-11-01 03:12:38','2026-11-01 03:12:38'),(15,NULL,2,'F-05','available','2026-11-01 03:12:38','2026-11-01 03:12:38'),(16,NULL,2,'F-06','available','2026-11-01 03:12:38','2026-11-01 03:12:38'),(17,NULL,2,'F-07','available','2026-11-01 03:12:38','2026-11-01 03:12:38'),(18,NULL,2,'F-08','occupied','2026-11-01 03:12:38','2026-11-01 03:12:38'),(19,NULL,2,'F-09','available','2026-11-01 03:12:38','2026-11-01 03:12:38'),(20,NULL,2,'F-10','available','2026-11-01 03:12:38','2026-11-01 03:12:38'),(21,NULL,3,'D-01','available','2026-11-01 03:12:38','2026-11-01 03:12:38'),(22,NULL,3,'D-02','available','2026-11-01 03:12:38','2026-11-01 03:12:38'),(23,NULL,3,'D-03','available','2026-11-01 03:12:38','2026-11-01 03:12:38'),(24,NULL,3,'D-04','occupied','2026-11-01 03:12:38','2026-11-01 03:12:38'),(25,NULL,3,'D-05','available','2026-11-01 03:12:38','2026-11-01 03:12:38'),(26,NULL,3,'D-06','available','2026-11-01 03:12:38','2026-11-01 03:12:38'),(27,NULL,3,'D-07','available','2026-11-01 03:12:38','2026-11-01 03:12:38'),(28,NULL,3,'D-08','occupied','2026-11-01 03:12:38','2026-11-01 03:12:38'),(29,NULL,3,'D-09','available','2026-11-01 03:12:38','2026-11-01 03:12:38'),(30,NULL,3,'D-10','available','2026-11-01 03:12:38','2026-11-01 03:12:38');
+INSERT INTO `seats` VALUES (1,1,1,'G-01','available','2026-11-14 09:44:37','2026-11-14 09:44:37'),(2,1,1,'G-02','available','2026-11-14 09:44:37','2026-11-14 09:44:37'),(3,1,1,'G-03','reserved','2026-11-14 09:44:37','2026-11-14 09:44:37'),(4,1,1,'G-04','occupied','2026-11-14 09:44:37','2026-11-14 09:44:37'),(5,1,1,'G-05','available','2026-11-14 09:44:37','2026-11-14 09:44:37'),(6,1,1,'G-06','available','2026-11-14 09:44:37','2026-11-14 09:44:37'),(7,1,1,'G-07','available','2026-11-14 09:44:37','2026-11-14 09:44:37'),(8,1,1,'G-08','occupied','2026-11-14 09:44:37','2026-11-14 09:44:37'),(9,1,1,'G-09','available','2026-11-14 09:44:37','2026-11-14 09:44:37'),(10,1,1,'G-10','available','2026-11-14 09:44:37','2026-11-14 09:44:37'),(11,1,2,'F-01','available','2026-11-14 09:44:37','2026-11-14 09:44:37'),(12,1,2,'F-02','available','2026-11-14 09:44:37','2026-11-14 09:44:37'),(13,1,2,'F-03','available','2026-11-14 09:44:37','2026-11-14 09:44:37'),(14,1,2,'F-04','occupied','2026-11-14 09:44:37','2026-11-14 09:44:37'),(15,1,2,'F-05','available','2026-11-14 09:44:37','2026-11-14 09:44:37'),(16,1,2,'F-06','available','2026-11-14 09:44:37','2026-11-14 09:44:37'),(17,1,2,'F-07','available','2026-11-14 09:44:37','2026-11-14 09:44:37'),(18,1,2,'F-08','occupied','2026-11-14 09:44:37','2026-11-14 09:44:37'),(19,1,2,'F-09','available','2026-11-14 09:44:37','2026-11-14 09:44:37'),(20,1,2,'F-10','available','2026-11-14 09:44:37','2026-11-14 09:44:37'),(21,1,3,'D-01','available','2026-11-14 09:44:37','2026-11-14 09:44:37'),(22,1,3,'D-02','available','2026-11-14 09:44:37','2026-11-14 09:44:37'),(23,1,3,'D-03','available','2026-11-14 09:44:37','2026-11-14 09:44:37'),(24,1,3,'D-04','occupied','2026-11-14 09:44:37','2026-11-14 09:44:37'),(25,1,3,'D-05','available','2026-11-14 09:44:37','2026-11-14 09:44:37'),(26,1,3,'D-06','available','2026-11-14 09:44:37','2026-11-14 09:44:37'),(27,1,3,'D-07','available','2026-11-14 09:44:37','2026-11-14 09:44:37'),(28,1,3,'D-08','occupied','2026-11-14 09:44:37','2026-11-14 09:44:37'),(29,1,3,'D-09','available','2026-11-14 09:44:37','2026-11-14 09:44:37'),(30,1,3,'D-10','available','2026-11-14 09:44:37','2026-11-14 09:44:37');
 /*!40000 ALTER TABLE `seats` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -488,7 +669,90 @@ CREATE TABLE `sessions` (
 
 LOCK TABLES `sessions` WRITE;
 /*!40000 ALTER TABLE `sessions` DISABLE KEYS */;
+INSERT INTO `sessions` VALUES ('rwasOrQa955s1pvONVYrFTJbZPwFZpZyfnqSJhoz',2,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36','eyJfdG9rZW4iOiJMWld5YkhXTjFOT0JGanBwZ05oU3RLbmpFVDFCTnJMWGNTVkRSaVh2IiwiX3ByZXZpb3VzIjp7InVybCI6Imh0dHA6XC9cLzEyNy4wLjAuMTo4MDAwXC9hZG1pblwvYm9va2luZ3MiLCJyb3V0ZSI6ImFkbWluLmJvb2tpbmdzIn0sIl9mbGFzaCI6eyJvbGQiOltdLCJuZXciOltdfSwibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiOjIsInBhc3N3b3JkX2hhc2hfd2ViIjoiOGQ2OWVkMmI4ODY3ODYxNjQyNTgyMjJiZmJjNzdkNDcwNDhhZDk4N2Y5MjcwM2JlZTJkNTMxYThlYzAyMzY0OSJ9',1794670423);
 /*!40000 ALTER TABLE `sessions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `smart_vacancy_alerts`
+--
+
+DROP TABLE IF EXISTS `smart_vacancy_alerts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `smart_vacancy_alerts` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `library_id` bigint(20) unsigned DEFAULT NULL,
+  `seat_id` bigint(20) unsigned NOT NULL,
+  `shift` enum('morning','evening','full_day') NOT NULL DEFAULT 'full_day',
+  `alert_date` date NOT NULL,
+  `title` varchar(255) NOT NULL DEFAULT 'Library Seat Available!',
+  `message` text NOT NULL,
+  `expires_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `status` enum('active','claimed','expired') NOT NULL DEFAULT 'active',
+  `claimed_by` bigint(20) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `smart_vacancy_alerts_library_id_foreign` (`library_id`),
+  KEY `smart_vacancy_alerts_seat_id_foreign` (`seat_id`),
+  KEY `smart_vacancy_alerts_claimed_by_foreign` (`claimed_by`),
+  KEY `smart_vacancy_alerts_alert_date_index` (`alert_date`),
+  CONSTRAINT `smart_vacancy_alerts_claimed_by_foreign` FOREIGN KEY (`claimed_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `smart_vacancy_alerts_library_id_foreign` FOREIGN KEY (`library_id`) REFERENCES `libraries` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `smart_vacancy_alerts_seat_id_foreign` FOREIGN KEY (`seat_id`) REFERENCES `seats` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `smart_vacancy_alerts`
+--
+
+LOCK TABLES `smart_vacancy_alerts` WRITE;
+/*!40000 ALTER TABLE `smart_vacancy_alerts` DISABLE KEYS */;
+INSERT INTO `smart_vacancy_alerts` VALUES (1,1,1,'full_day','2026-11-14','Library Seat Available!','Seat G-01 is now available! Book within 5 minutes.','2026-11-14 09:49:38','active',NULL,'2026-11-14 09:44:38','2026-11-14 09:44:38');
+/*!40000 ALTER TABLE `smart_vacancy_alerts` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `subscriptions`
+--
+
+DROP TABLE IF EXISTS `subscriptions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `subscriptions` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint(20) unsigned NOT NULL,
+  `plan_id` bigint(20) unsigned NOT NULL,
+  `library_id` bigint(20) unsigned DEFAULT NULL,
+  `seat_id` bigint(20) unsigned DEFAULT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `status` enum('active','expired','cancelled','pending_payment') NOT NULL DEFAULT 'active',
+  `auto_renew` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `subscriptions_user_id_foreign` (`user_id`),
+  KEY `subscriptions_plan_id_foreign` (`plan_id`),
+  KEY `subscriptions_library_id_foreign` (`library_id`),
+  KEY `subscriptions_seat_id_foreign` (`seat_id`),
+  CONSTRAINT `subscriptions_library_id_foreign` FOREIGN KEY (`library_id`) REFERENCES `libraries` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `subscriptions_plan_id_foreign` FOREIGN KEY (`plan_id`) REFERENCES `plans` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `subscriptions_seat_id_foreign` FOREIGN KEY (`seat_id`) REFERENCES `seats` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `subscriptions_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `subscriptions`
+--
+
+LOCK TABLES `subscriptions` WRITE;
+/*!40000 ALTER TABLE `subscriptions` DISABLE KEYS */;
+INSERT INTO `subscriptions` VALUES (1,3,4,1,3,'2026-10-25','2026-11-24','active',1,'2026-11-14 09:44:38','2026-11-14 09:44:38'),(2,4,5,1,4,'2026-08-19','2026-11-17','active',0,'2026-11-14 09:44:38','2026-11-14 09:44:38');
+/*!40000 ALTER TABLE `subscriptions` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -525,8 +789,49 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Library Staff','staff@library.com',NULL,NULL,'9876543210','$2y$12$01j5SDfkfa4tFO.PLMkEnuEJnWHwabBfFbbgOutBja1sUXZ/O57n.','staff','active',NULL,NULL,'2026-11-01 03:12:36','2026-11-01 03:12:36'),(2,'Library Admin','admin@library.com',NULL,NULL,'9876543211','$2y$12$WDvAC1fZWVpUBHeRxRyPp.vXAPHTc5D6lbIuH.JggXCjm4CnCLk0m','admin','active',NULL,NULL,'2026-11-01 03:12:37','2026-11-01 03:12:37'),(3,'John Doe','member@library.com',NULL,NULL,'9123456780','$2y$12$C0sABzG5Wb/4ilC3EtQP1eSnlJFPDuBCRUL4jCRHUGilSlfApF2LC','member','active',NULL,NULL,'2026-11-01 03:12:37','2026-11-01 03:12:37'),(4,'Priya Sharma','priya@example.com',NULL,NULL,'9822334455','$2y$12$ozfBSJwZT5bm4CvQpJF20ObmOeN.6aPYMe1fDrOSxrRm4yevm/fky','member','active',NULL,NULL,'2026-11-01 03:12:37','2026-11-01 03:12:37'),(5,'Rahul Verma','rahul@example.com',NULL,NULL,'9811223344','$2y$12$fB4G1.LtQXEe8NVT.pTnEOPs6XQwNJrTQ/csxkTaiHWWo/zF7wGJa','member','active',NULL,NULL,'2026-11-01 03:12:38','2026-11-01 03:12:38'),(6,'Vikram Malhotra','manager@library.com',NULL,NULL,'9822001122','$2y$12$wItUfRW9NQtEJWNzfM6vcepxfmbPAM2vz0spcrM6hqnt2IIN4DgfC','manager','active',NULL,NULL,'2026-11-01 03:12:38','2026-11-01 03:12:38'),(7,'Sunil Deshmukh','sunil@studyhaven.in',NULL,NULL,'9822003344','$2y$12$jp7tBL11fGJesswoXKxNvOeq6cT.Ia9dhABCWhQwTIjOdXNgoWQn2','manager','active',NULL,NULL,'2026-11-01 03:12:39','2026-11-01 03:12:39');
+INSERT INTO `users` VALUES (1,'Library Staff','staff@library.com',NULL,NULL,'9876543210','$2y$12$fUv0yjn8K.jdwq1jm2dLC.a8gnY8tC/FSllo/zcmY94SXQ9RQymc.','staff','active',NULL,NULL,'2026-11-14 09:44:35','2026-11-14 09:44:35'),(2,'Library Admin','admin@library.com',NULL,NULL,'9876543211','$2y$12$pMpK6oWVpHUhNZFkx8G4IO0Xj7d27sV4SsYLfLS9mWSI2Y9wnAN1S','admin','active',NULL,NULL,'2026-11-14 09:44:36','2026-11-14 09:44:36'),(3,'John Doe','member@library.com',NULL,NULL,'9123456780','$2y$12$OJfgVGeIZJL7mvOuWw8OyOpsKm4hj1Xor5l9sIGje805ubtpP4aNC','member','active',NULL,NULL,'2026-11-14 09:44:36','2026-11-14 09:44:36'),(4,'Priya Sharma','priya@example.com',NULL,NULL,'9822334455','$2y$12$IxHOmda9D8v07/YC58QssORcuTzTWSlYiNXYQRxsYAg7la0GBWCCS','member','active',NULL,NULL,'2026-11-14 09:44:36','2026-11-14 09:44:36'),(5,'Rahul Verma','rahul@example.com',NULL,NULL,'9811223344','$2y$12$bUIkW4505vWIe8HWCP7hu.Nva17JwXPHKyGjnjYfXGajBDu2bU4Ju','member','active',NULL,NULL,'2026-11-14 09:44:37','2026-11-14 09:44:37'),(6,'Vikram Malhotra','manager@library.com',NULL,NULL,'9822001122','$2y$12$zGuiR5FawrGwe8j/Lbz7vufk5kxI9X4pVFZiJgkJ4MtrGBscMQrBK','manager','active',NULL,NULL,'2026-11-14 09:44:37','2026-11-14 09:44:37'),(7,'Sunil Deshmukh','sunil@studyhaven.in',NULL,NULL,'9822003344','$2y$12$/pn/lcm1RspZQ3K1idTj7ezUbsEy.UXcIjDsYPJRrBw5sa4E6AAu6','manager','active',NULL,NULL,'2026-11-14 09:44:37','2026-11-14 09:44:37');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `waiting_lists`
+--
+
+DROP TABLE IF EXISTS `waiting_lists`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `waiting_lists` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint(20) unsigned NOT NULL,
+  `library_id` bigint(20) unsigned DEFAULT NULL,
+  `zone_id` bigint(20) unsigned DEFAULT NULL,
+  `seat_id` bigint(20) unsigned DEFAULT NULL,
+  `shift` enum('morning','evening','full_day','any') NOT NULL DEFAULT 'full_day',
+  `desired_date` date NOT NULL,
+  `status` enum('waiting','notified','fulfilled','cancelled') NOT NULL DEFAULT 'waiting',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `waiting_lists_user_id_foreign` (`user_id`),
+  KEY `waiting_lists_library_id_foreign` (`library_id`),
+  KEY `waiting_lists_zone_id_foreign` (`zone_id`),
+  KEY `waiting_lists_seat_id_foreign` (`seat_id`),
+  KEY `waiting_lists_desired_date_index` (`desired_date`),
+  CONSTRAINT `waiting_lists_library_id_foreign` FOREIGN KEY (`library_id`) REFERENCES `libraries` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `waiting_lists_seat_id_foreign` FOREIGN KEY (`seat_id`) REFERENCES `seats` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `waiting_lists_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `waiting_lists_zone_id_foreign` FOREIGN KEY (`zone_id`) REFERENCES `zones` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `waiting_lists`
+--
+
+LOCK TABLES `waiting_lists` WRITE;
+/*!40000 ALTER TABLE `waiting_lists` DISABLE KEYS */;
+INSERT INTO `waiting_lists` VALUES (1,5,1,NULL,NULL,'morning','2026-11-14','waiting','2026-11-14 09:44:38','2026-11-14 09:44:38');
+/*!40000 ALTER TABLE `waiting_lists` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -553,7 +858,7 @@ CREATE TABLE `zones` (
 
 LOCK TABLES `zones` WRITE;
 /*!40000 ALTER TABLE `zones` DISABLE KEYS */;
-INSERT INTO `zones` VALUES (1,'Ground Floor - Silent Zone','GF-SZ','2026-11-01 03:12:38','2026-11-01 03:12:38'),(2,'First Floor - AC Hall','FF-AC','2026-11-01 03:12:38','2026-11-01 03:12:38'),(3,'Second Floor - Discussion Hall','SF-DH','2026-11-01 03:12:38','2026-11-01 03:12:38');
+INSERT INTO `zones` VALUES (1,'Ground Floor - Silent Zone','GF-SZ','2026-11-14 09:44:37','2026-11-14 09:44:37'),(2,'First Floor - AC Hall','FF-AC','2026-11-14 09:44:37','2026-11-14 09:44:37'),(3,'Second Floor - Discussion Hall','SF-DH','2026-11-14 09:44:37','2026-11-14 09:44:37');
 /*!40000 ALTER TABLE `zones` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -566,4 +871,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-11-01 14:15:59
+-- Dump completed on 2026-11-15 12:13:55
