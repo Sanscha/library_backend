@@ -363,4 +363,109 @@ class ManagerLibraryManagementTest extends TestCase
             ->assertSee('Library Suvidha')
             ->assertSee('Owner Ganesh Patil');
     }
+
+    public function test_manager_can_manage_pricing_and_days_for_their_library(): void
+    {
+        $managerToken = $this->manager->createToken('manager_token')->plainTextToken;
+
+        // 1. Manager fetches plans for the first time -> auto-seeds default 1M, 3M, 6M, 1Y plans
+        $getRes = $this->withHeader('Authorization', 'Bearer '.$managerToken)
+            ->getJson('/api/manager/library/plans');
+
+        $getRes->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('library_id', $this->library->id)
+            ->assertJsonCount(4, 'data');
+
+        $firstPlanId = $getRes->json('data.0.id');
+
+        // 2. Manager updates price and duration days of the 1-Month plan
+        $updateRes = $this->withHeader('Authorization', 'Bearer '.$managerToken)
+            ->putJson("/api/manager/library/plans/{$firstPlanId}", [
+                'name' => '1 Month Premium (Owner Special)',
+                'price' => 1500,
+                'duration_days' => 35,
+                'shift' => 'full_day',
+                'description' => 'Special discounted price with 5 bonus days!',
+            ]);
+
+        $updateRes->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.price', '1500.00')
+            ->assertJsonPath('data.duration_days', 35);
+
+        // 3. Manager creates a brand new custom plan (e.g., 15 Days Crash Course)
+        $createRes = $this->withHeader('Authorization', 'Bearer '.$managerToken)
+            ->postJson('/api/manager/library/plans', [
+                'name' => '15 Days Exam Crash Plan',
+                'price' => 899,
+                'duration_days' => 15,
+                'shift' => 'morning',
+                'description' => 'Dedicated morning seat for 15 intense exam prep days.',
+            ]);
+
+        $createRes->assertStatus(201)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.name', '15 Days Exam Crash Plan')
+            ->assertJsonPath('data.price', '899.00')
+            ->assertJsonPath('data.duration_days', 15)
+            ->assertJsonPath('data.library_id', $this->library->id);
+
+        $customPlanId = $createRes->json('data.id');
+
+        // 4. Manager toggles active status
+        $toggleRes = $this->withHeader('Authorization', 'Bearer '.$managerToken)
+            ->patchJson("/api/manager/library/plans/{$customPlanId}/toggle");
+
+        $toggleRes->assertStatus(200)
+            ->assertJsonPath('data.is_active', false);
+
+        // Toggle back to active
+        $this->withHeader('Authorization', 'Bearer '.$managerToken)
+            ->patchJson("/api/manager/library/plans/{$customPlanId}/toggle")
+            ->assertJsonPath('data.is_active', true);
+
+        // 5. Student fetches plans for this specific library
+        $studentRes = $this->getJson("/api/libraries/{$this->library->id}/plans");
+        $studentRes->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('library_id', $this->library->id);
+
+        // Total 5 plans (4 seeded + 1 created)
+        $this->assertCount(5, $studentRes->json('data'));
+
+        // 6. Student subscribes to the customized plan and gets custom price & duration
+        $student = User::create([
+            'name' => 'Amit Sharma',
+            'email' => 'amit@student.com',
+            'phone' => '9112233445',
+            'role' => 'user',
+            'status' => 'active',
+            'password' => bcrypt('secret123'),
+        ]);
+        $studentToken = $student->createToken('student_token')->plainTextToken;
+
+        $subRes = $this->withHeader('Authorization', 'Bearer '.$studentToken)
+            ->postJson('/api/plans/subscribe', [
+                'plan_id' => $firstPlanId,
+                'start_date' => now()->toDateString(),
+            ]);
+
+        $subRes->assertStatus(201)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('subscription.plan.price', '1500.00')
+            ->assertJsonPath('subscription.plan.duration_days', 35)
+            ->assertJsonPath('days_remaining', 35)
+            ->assertJsonPath('payment.amount', '1500.00')
+            ->assertJsonPath('payment.library_id', $this->library->id);
+
+        // 7. Manager can delete a custom plan
+        $delRes = $this->withHeader('Authorization', 'Bearer '.$managerToken)
+            ->deleteJson("/api/manager/library/plans/{$customPlanId}");
+
+        $delRes->assertStatus(200)
+            ->assertJsonPath('success', true);
+
+        $this->assertDatabaseMissing('plans', ['id' => $customPlanId]);
+    }
 }

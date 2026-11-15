@@ -13,13 +13,46 @@ use Illuminate\Http\Request;
 class MembershipController extends Controller
 {
     /**
-     * List all active membership plans (1 Month, 3 Months, 6 Months, 1 Year).
+     * List active membership plans (optionally scoped to a specific library).
      */
-    public function index(): JsonResponse
+    public function index(Request $request, int|string|null $id = null): JsonResponse
     {
+        $targetLibId = $id ?? $request->route('id') ?? $request->route('libraryId') ?? $request->query('library_id');
+
+        if ($targetLibId) {
+            $libraryPlans = Plan::where('library_id', $targetLibId)
+                ->where('is_active', true)
+                ->orderBy('duration_days')
+                ->get();
+
+            if ($libraryPlans->isNotEmpty()) {
+                return response()->json([
+                    'success' => true,
+                    'library_id' => (int) $targetLibId,
+                    'message' => 'Library membership plans retrieved successfully.',
+                    'data' => $libraryPlans,
+                ], 200);
+            }
+
+            // Seed defaults for this library if none exist yet
+            $libraryPlans = Plan::seedDefaultsForLibrary((int) $targetLibId);
+
+            return response()->json([
+                'success' => true,
+                'library_id' => (int) $targetLibId,
+                'message' => 'Library membership plans retrieved successfully.',
+                'data' => $libraryPlans,
+            ], 200);
+        }
+
         $plans = Plan::where('is_active', true)
+            ->whereNull('library_id')
             ->orderBy('duration_days')
             ->get();
+
+        if ($plans->isEmpty()) {
+            $plans = Plan::where('is_active', true)->orderBy('duration_days')->get();
+        }
 
         return response()->json([
             'success' => true,
@@ -54,10 +87,12 @@ class MembershipController extends Controller
             ->where('status', 'active')
             ->update(['status' => 'expired']);
 
+        $targetLibraryId = $fields['library_id'] ?? $plan->library_id;
+
         $subscription = Subscription::create([
             'user_id' => $user->id,
             'plan_id' => $plan->id,
-            'library_id' => $fields['library_id'] ?? null,
+            'library_id' => $targetLibraryId,
             'seat_id' => $fields['seat_id'] ?? null,
             'start_date' => $startDate->toDateString(),
             'end_date' => $endDate->toDateString(),
@@ -69,7 +104,7 @@ class MembershipController extends Controller
         $paymentMethod = $fields['payment_method'] ?? 'upi';
         $payment = Payment::create([
             'user_id' => $user->id,
-            'library_id' => $fields['library_id'] ?? null,
+            'library_id' => $targetLibraryId,
             'plan_id' => $plan->id,
             'amount' => $plan->price,
             'currency' => 'INR',

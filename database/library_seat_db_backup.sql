@@ -366,7 +366,7 @@ CREATE TABLE `migrations` (
   `migration` varchar(255) NOT NULL,
   `batch` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -375,7 +375,7 @@ CREATE TABLE `migrations` (
 
 LOCK TABLES `migrations` WRITE;
 /*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
-INSERT INTO `migrations` VALUES (1,'0001_01_01_000000_create_users_table',1),(2,'0001_01_01_000001_create_cache_table',1),(3,'0001_01_01_000002_create_jobs_table',1),(4,'2026_10_29_000001_create_library_seats_tables',1),(5,'2026_10_29_000002_create_plans_and_payments_tables',1),(6,'2026_10_29_160444_create_personal_access_tokens_table',1),(7,'2026_10_31_000001_create_libraries_and_otps_tables',1),(8,'2026_11_14_150844_create_library_advanced_features_tables',1),(9,'2026_11_15_073457_add_gallery_and_operating_hours_to_libraries_table',2),(10,'2026_11_15_075450_create_settings_table',3);
+INSERT INTO `migrations` VALUES (1,'0001_01_01_000000_create_users_table',1),(2,'0001_01_01_000001_create_cache_table',1),(3,'0001_01_01_000002_create_jobs_table',1),(4,'2026_10_29_000001_create_library_seats_tables',1),(5,'2026_10_29_000002_create_plans_and_payments_tables',1),(6,'2026_10_29_160444_create_personal_access_tokens_table',1),(7,'2026_10_31_000001_create_libraries_and_otps_tables',1),(8,'2026_11_14_150844_create_library_advanced_features_tables',1),(9,'2026_11_15_073457_add_gallery_and_operating_hours_to_libraries_table',2),(10,'2026_11_15_075450_create_settings_table',3),(11,'2026_11_15_080425_add_library_id_to_plans_table',4);
 /*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -591,6 +591,7 @@ DROP TABLE IF EXISTS `plans`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `plans` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `library_id` bigint(20) unsigned DEFAULT NULL,
   `name` varchar(255) NOT NULL,
   `price` decimal(10,2) NOT NULL,
   `duration_days` int(11) NOT NULL DEFAULT 1,
@@ -599,7 +600,9 @@ CREATE TABLE `plans` (
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `plans_library_id_foreign` (`library_id`),
+  CONSTRAINT `plans_library_id_foreign` FOREIGN KEY (`library_id`) REFERENCES `libraries` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -609,7 +612,7 @@ CREATE TABLE `plans` (
 
 LOCK TABLES `plans` WRITE;
 /*!40000 ALTER TABLE `plans` DISABLE KEYS */;
-INSERT INTO `plans` VALUES (1,'Morning Shift Pass (8 AM - 2 PM)',80.00,1,'morning','Single day entry for the silent study morning slot.',1,'2026-11-14 09:44:37','2026-11-14 09:44:37'),(2,'Evening Shift Pass (2 PM - 8 PM)',80.00,1,'evening','Single day entry for the evening slot.',1,'2026-11-14 09:44:37','2026-11-14 09:44:37'),(3,'Full Day Study Pass (8 AM - 8 PM)',150.00,1,'full_day','Full access with high speed WiFi and power socket.',1,'2026-11-14 09:44:37','2026-11-14 09:44:37'),(4,'1 Month Regular Pass (30 Days)',2000.00,30,'all','Dedicated seat access with AC, high-speed Wi-Fi, and locker for 1 Month.',1,'2026-11-14 09:44:37','2026-11-14 09:44:37'),(5,'3 Months Prime Pass (90 Days)',5400.00,90,'all','Popular quarterly pack with free locker allocation and priority seat selection.',1,'2026-11-14 09:44:37','2026-11-14 09:44:37'),(6,'6 Months Executive Pass (180 Days)',9900.00,180,'all','Half-yearly pass tailored for competitive exam preparation with complimentary locker.',1,'2026-11-14 09:44:37','2026-11-14 09:44:37'),(7,'1 Year VIP Annual Pass (365 Days)',18000.00,365,'all','Ultimate 1-Year unlimited access pass with permanent seat reservation.',1,'2026-11-14 09:44:37','2026-11-14 09:44:37');
+INSERT INTO `plans` VALUES (1,NULL,'Morning Shift Pass (8 AM - 2 PM)',80.00,1,'morning','Single day entry for the silent study morning slot.',1,'2026-11-14 09:44:37','2026-11-14 09:44:37'),(2,NULL,'Evening Shift Pass (2 PM - 8 PM)',80.00,1,'evening','Single day entry for the evening slot.',1,'2026-11-14 09:44:37','2026-11-14 09:44:37'),(3,NULL,'Full Day Study Pass (8 AM - 8 PM)',150.00,1,'full_day','Full access with high speed WiFi and power socket.',1,'2026-11-14 09:44:37','2026-11-14 09:44:37'),(4,NULL,'1 Month Regular Pass (30 Days)',2000.00,30,'all','Dedicated seat access with AC, high-speed Wi-Fi, and locker for 1 Month.',1,'2026-11-14 09:44:37','2026-11-14 09:44:37'),(5,NULL,'3 Months Prime Pass (90 Days)',5400.00,90,'all','Popular quarterly pack with free locker allocation and priority seat selection.',1,'2026-11-14 09:44:37','2026-11-14 09:44:37'),(6,NULL,'6 Months Executive Pass (180 Days)',9900.00,180,'all','Half-yearly pass tailored for competitive exam preparation with complimentary locker.',1,'2026-11-14 09:44:37','2026-11-14 09:44:37'),(7,NULL,'1 Year VIP Annual Pass (365 Days)',18000.00,365,'all','Ultimate 1-Year unlimited access pass with permanent seat reservation.',1,'2026-11-14 09:44:37','2026-11-14 09:44:37');
 /*!40000 ALTER TABLE `plans` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -672,7 +675,7 @@ CREATE TABLE `sessions` (
 
 LOCK TABLES `sessions` WRITE;
 /*!40000 ALTER TABLE `sessions` DISABLE KEYS */;
-INSERT INTO `sessions` VALUES ('7ujeSG8uUECwcdkrn9Trhx0KRJPmpVE6vftagJ0o',2,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36','eyJfdG9rZW4iOiJKVXN3Z0VmamhNblRmMGdVS3dNWWJYSDdsY0JrbTRabmp4SndHZENmIiwiX3ByZXZpb3VzIjp7InVybCI6Imh0dHA6XC9cLzEyNy4wLjAuMTo4MDAwXC9hZG1pblwvbGlicmFyaWVzIiwicm91dGUiOiJhZG1pbi5saWJyYXJpZXMifSwiX2ZsYXNoIjp7Im9sZCI6W10sIm5ldyI6W119LCJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI6MiwicGFzc3dvcmRfaGFzaF93ZWIiOiI4ZDY5ZWQyYjg4Njc4NjE2NDI1ODIyMmJmYmM3N2Q0NzA0OGFkOTg3ZjkyNzAzYmVlMmQ1MzFhOGVjMDIzNjQ5In0=',1794729436);
+INSERT INTO `sessions` VALUES ('7ujeSG8uUECwcdkrn9Trhx0KRJPmpVE6vftagJ0o',2,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36','eyJfdG9rZW4iOiJKVXN3Z0VmamhNblRmMGdVS3dNWWJYSDdsY0JrbTRabmp4SndHZENmIiwiX3ByZXZpb3VzIjp7InVybCI6Imh0dHA6XC9cLzEyNy4wLjAuMTo4MDAwXC9hZG1pbiIsInJvdXRlIjoiYWRtaW4uZGFzaGJvYXJkIn0sIl9mbGFzaCI6eyJvbGQiOltdLCJuZXciOltdfSwibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiOjIsInBhc3N3b3JkX2hhc2hfd2ViIjoiOGQ2OWVkMmI4ODY3ODYxNjQyNTgyMjJiZmJjNzdkNDcwNDhhZDk4N2Y5MjcwM2JlZTJkNTMxYThlYzAyMzY0OSJ9',1794729604);
 /*!40000 ALTER TABLE `sessions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -693,7 +696,7 @@ CREATE TABLE `settings` (
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `settings_key_unique` (`key`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -702,6 +705,7 @@ CREATE TABLE `settings` (
 
 LOCK TABLES `settings` WRITE;
 /*!40000 ALTER TABLE `settings` DISABLE KEYS */;
+INSERT INTO `settings` VALUES (1,'library_registration_fee','999.00','pricing','One-time onboarding fee for library owners','2026-11-15 02:29:32','2026-11-15 02:29:32'),(2,'platform_name','Ezpoint','general','Platform Name','2026-11-15 02:29:32','2026-11-15 02:29:32'),(3,'support_email','support@seatsync.com','general','Support Email','2026-11-15 02:29:32','2026-11-15 02:29:32'),(4,'support_phone','+91 9876543210','general','Support Phone','2026-11-15 02:29:32','2026-11-15 02:29:32');
 /*!40000 ALTER TABLE `settings` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -903,4 +907,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-11-15 13:28:11
+-- Dump completed on 2026-11-15 13:38:13

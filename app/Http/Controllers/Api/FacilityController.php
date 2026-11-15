@@ -15,9 +15,9 @@ class FacilityController extends Controller
     /**
      * Get real-time Facility Availability for a library.
      */
-    public function index(Request $request, ?int $libraryId = null): JsonResponse
+    public function index(Request $request, int|string|null $id = null): JsonResponse
     {
-        $targetLibraryId = $libraryId ?? $request->query('library_id');
+        $targetLibraryId = $id ?? $request->route('id') ?? $request->route('libraryId') ?? $request->query('library_id');
 
         if (! $targetLibraryId) {
             $targetLibraryId = Library::where('status', 'active')->value('id');

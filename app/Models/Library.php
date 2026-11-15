@@ -100,6 +100,14 @@ class Library extends Model
     }
 
     /**
+     * Get all membership pricing plans configured for this library.
+     */
+    public function plans(): HasMany
+    {
+        return $this->hasMany(Plan::class);
+    }
+
+    /**
      * Get all facilities for this library.
      */
     public function facilities(): HasMany

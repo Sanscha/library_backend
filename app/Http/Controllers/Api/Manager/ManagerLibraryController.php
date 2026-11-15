@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Manager;
 use App\Http\Controllers\Controller;
 use App\Models\Facility;
 use App\Models\Library;
+use App\Models\Plan;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -31,6 +32,12 @@ class ManagerLibraryController extends Controller
         $facilities = $library->facilities()->get();
         if ($facilities->isEmpty()) {
             $facilities = Facility::seedDefaultsForLibrary($library->id);
+        }
+
+        // Ensure membership pricing plans are initialized
+        $plans = $library->plans()->orderBy('duration_days')->get();
+        if ($plans->isEmpty()) {
+            $plans = Plan::seedDefaultsForLibrary($library->id);
         }
 
         $seats = $library->seats;
@@ -62,6 +69,7 @@ class ManagerLibraryController extends Controller
             ],
             'operating_hours' => $library->operating_hours ?? $this->getDefaultOperatingHours(),
             'facilities' => $facilities,
+            'plans' => $plans,
             'seat_statistics' => $seatStats,
         ], 200);
     }
@@ -563,6 +571,184 @@ class ManagerLibraryController extends Controller
             'library_name' => $library->name,
             'summary' => $stats,
             'seats' => $seatData,
+        ], 200);
+    }
+
+    /**
+     * Get all membership pricing plans for manager's library.
+     */
+    public function getPlans(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $library = $user->library;
+
+        if (! $library) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No library linked to this manager account.',
+            ], 404);
+        }
+
+        $plans = $library->plans()->orderBy('duration_days')->get();
+        if ($plans->isEmpty()) {
+            $plans = Plan::seedDefaultsForLibrary($library->id);
+        }
+
+        return response()->json([
+            'success' => true,
+            'library_id' => $library->id,
+            'library_name' => $library->name,
+            'total_plans' => $plans->count(),
+            'plans' => $plans,
+            'data' => $plans,
+        ], 200);
+    }
+
+    /**
+     * Create a new pricing / membership plan for manager's library.
+     */
+    public function storePlan(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $library = $user->library;
+
+        if (! $library) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No library linked to this manager account.',
+            ], 404);
+        }
+
+        $fields = $request->validate([
+            'name' => 'required|string|max:100',
+            'price' => 'required|numeric|min:0',
+            'duration_days' => 'required|integer|min:1|max:1000',
+            'shift' => 'nullable|in:morning,evening,full_day,all',
+            'description' => 'nullable|string|max:500',
+        ]);
+
+        $plan = Plan::create([
+            'library_id' => $library->id,
+            'name' => $fields['name'],
+            'price' => (float) $fields['price'],
+            'duration_days' => (int) $fields['duration_days'],
+            'shift' => $fields['shift'] ?? 'all',
+            'description' => $fields['description'] ?? null,
+            'is_active' => true,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Plan '{$plan->name}' created successfully.",
+            'plan' => $plan,
+            'data' => $plan,
+        ], 201);
+    }
+
+    /**
+     * Update an existing membership plan for manager's library.
+     */
+    public function updatePlan(Request $request, int|string $id): JsonResponse
+    {
+        $user = $request->user();
+        $library = $user->library;
+
+        if (! $library) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No library linked to this manager account.',
+            ], 404);
+        }
+
+        $plan = $library->plans()->findOrFail($id);
+
+        $fields = $request->validate([
+            'name' => 'sometimes|required|string|max:100',
+            'price' => 'sometimes|required|numeric|min:0',
+            'duration_days' => 'sometimes|required|integer|min:1|max:1000',
+            'shift' => 'nullable|in:morning,evening,full_day,all',
+            'description' => 'nullable|string|max:500',
+            'is_active' => 'nullable|boolean',
+        ]);
+
+        if (isset($fields['name'])) {
+            $plan->name = $fields['name'];
+        }
+        if (isset($fields['price'])) {
+            $plan->price = (float) $fields['price'];
+        }
+        if (isset($fields['duration_days'])) {
+            $plan->duration_days = (int) $fields['duration_days'];
+        }
+        if (array_key_exists('shift', $fields)) {
+            $plan->shift = $fields['shift'] ?? 'all';
+        }
+        if (array_key_exists('description', $fields)) {
+            $plan->description = $fields['description'];
+        }
+        if (array_key_exists('is_active', $fields)) {
+            $plan->is_active = (bool) $fields['is_active'];
+        }
+
+        $plan->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Plan '{$plan->name}' updated successfully.",
+            'plan' => $plan,
+            'data' => $plan,
+        ], 200);
+    }
+
+    /**
+     * Toggle a plan's active status.
+     */
+    public function togglePlan(Request $request, int|string $id): JsonResponse
+    {
+        $user = $request->user();
+        $library = $user->library;
+
+        if (! $library) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No library linked to this manager account.',
+            ], 404);
+        }
+
+        $plan = $library->plans()->findOrFail($id);
+        $plan->is_active = ! $plan->is_active;
+        $plan->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Plan '{$plan->name}' is now ".($plan->is_active ? 'active' : 'disabled').'.',
+            'plan' => $plan,
+            'data' => $plan,
+        ], 200);
+    }
+
+    /**
+     * Delete a custom plan from manager's library.
+     */
+    public function destroyPlan(Request $request, int|string $id): JsonResponse
+    {
+        $user = $request->user();
+        $library = $user->library;
+
+        if (! $library) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No library linked to this manager account.',
+            ], 404);
+        }
+
+        $plan = $library->plans()->findOrFail($id);
+        $name = $plan->name;
+        $plan->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Plan '{$name}' deleted successfully.",
         ], 200);
     }
 

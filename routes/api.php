@@ -34,8 +34,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/seats/live-grid', [SeatController::class, 'getSeatGrid']);
 Route::get('/seats/smart-grid', [SeatController::class, 'getSmartGrid']);
 
-// Membership Plans (1M, 3M, 6M, 1Y)
+// Membership Plans (1M, 3M, 6M, 1Y or library custom)
 Route::get('/plans', [MembershipController::class, 'index']);
+Route::get('/libraries/{id}/plans', [MembershipController::class, 'index']);
 
 // Study Room Rules & Notices
 Route::get('/rules', [NoticeController::class, 'rules']);
@@ -101,6 +102,13 @@ Route::prefix('manager')->group(function () {
         Route::post('/library/facilities', [ManagerLibraryController::class, 'storeFacility']);
         Route::put('/library/facilities/{id}', [ManagerLibraryController::class, 'updateFacility']);
         Route::delete('/library/facilities/{id}', [ManagerLibraryController::class, 'destroyFacility']);
+
+        // Membership Plans & Pricing Management (Custom Rates & Days)
+        Route::get('/library/plans', [ManagerLibraryController::class, 'getPlans']);
+        Route::post('/library/plans', [ManagerLibraryController::class, 'storePlan']);
+        Route::put('/library/plans/{id}', [ManagerLibraryController::class, 'updatePlan']);
+        Route::patch('/library/plans/{id}/toggle', [ManagerLibraryController::class, 'togglePlan']);
+        Route::delete('/library/plans/{id}', [ManagerLibraryController::class, 'destroyPlan']);
 
         // Seat Management & Live Availability
         Route::get('/dashboard', [ManagerSeatController::class, 'dashboard']);
